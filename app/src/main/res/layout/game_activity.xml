@@ -1,0 +1,255 @@
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+	<LinearLayout
+		android:id="@+id/top"
+		android:layout_width="match_parent"
+		android:layout_height="100dp"
+		android:padding="8dp"
+		android:background="@color/colorPrimary"
+		android:orientation="vertical" />
+	<LinearLayout
+		android:id="@+id/body"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#FFFFFF"
+		android:orientation="vertical">
+		<LinearLayout
+			android:id="@+id/game_container"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_horizontal|bottom"
+			android:orientation="vertical"
+			android:layout_weight="1">
+			<LinearLayout
+				android:id="@+id/top_card_preview_section"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="10dp"
+				android:layout_marginBottom="20dp"
+				android:gravity="center_horizontal"
+				android:orientation="vertical">
+				<TextView
+					android:id="@+id/top_card_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginBottom="8dp"
+					android:text="Top Card"
+					android:textColor="#222222"
+					android:textSize="16sp"
+					android:textStyle="bold" />
+				<LinearLayout
+					android:id="@+id/top_card_preview"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:minWidth="110dp"
+					android:minHeight="150dp"
+					android:gravity="center"
+					android:orientation="vertical" />
+			</LinearLayout>
+			<LinearLayout
+				android:id="@+id/player_container"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+				<LinearLayout
+					android:id="@+id/player_1_container"
+					android:layout_width="match_parent"
+					android:layout_height="60dp"
+					android:paddingLeft="30dp"
+					android:paddingRight="20dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:orientation="horizontal">
+					<TextView
+						android:id="@+id/p1_name_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Player 1"
+						android:textSize="12sp" />
+					<TextView
+						android:id="@+id/p1_cards_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text=" has 8 cards"
+						android:textSize="12sp"
+						android:layout_weight="1" />
+					<LinearLayout
+						android:id="@+id/penalty_p1"
+						android:layout_width="100dp"
+						android:layout_height="50dp"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="horizontal"
+						android:background="@drawable/take_card_btn_bg"
+						android:clickable="true"
+						android:focusable="true">
+						<TextView
+							android:id="@+id/penalty_txt_1"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:gravity="center_horizontal|center_vertical"
+							android:text="Penalty"
+							android:textSize="14sp" />
+					</LinearLayout>
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/player_2_container"
+					android:layout_width="match_parent"
+					android:layout_height="60dp"
+					android:paddingLeft="30dp"
+					android:paddingRight="20dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:orientation="horizontal">
+					<TextView
+						android:id="@+id/p2_name_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Player 2"
+						android:textSize="12sp" />
+					<TextView
+						android:id="@+id/p2_cards_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text=" has 8 cards"
+						android:textSize="12sp"
+						android:layout_weight="1" />
+					<LinearLayout
+						android:id="@+id/penalty_p2"
+						android:layout_width="100dp"
+						android:layout_height="50dp"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="horizontal"
+						android:background="@drawable/take_card_btn_bg"
+						android:clickable="true"
+						android:focusable="true">
+						<TextView
+							android:id="@+id/penalty_txt_2"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:gravity="center_horizontal|center_vertical"
+							android:text="Penalty"
+							android:textSize="14sp" />
+					</LinearLayout>
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/player_3_container"
+					android:layout_width="match_parent"
+					android:layout_height="60dp"
+					android:paddingLeft="30dp"
+					android:paddingRight="20dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:orientation="horizontal">
+					<TextView
+						android:id="@+id/p3_name_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Player 3"
+						android:textSize="12sp" />
+					<TextView
+						android:id="@+id/p3_cards_txt"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text=" has 8 cards"
+						android:textSize="12sp"
+						android:layout_weight="1" />
+					<LinearLayout
+						android:id="@+id/penalty_p3"
+						android:layout_width="100dp"
+						android:layout_height="50dp"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="horizontal"
+						android:background="@drawable/take_card_btn_bg"
+						android:clickable="true"
+						android:focusable="true">
+						<TextView
+							android:id="@+id/penalty_txt_3"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
+							android:gravity="center_horizontal|center_vertical"
+							android:text="Penalty"
+							android:textSize="14sp" />
+					</LinearLayout>
+				</LinearLayout>
+			</LinearLayout>
+			<LinearLayout
+				android:id="@+id/btns_container"
+				android:layout_width="match_parent"
+				android:layout_height="100dp"
+				android:paddingLeft="20dp"
+				android:paddingRight="20dp"
+				android:gravity="center_vertical"
+				android:orientation="horizontal">
+				<LinearLayout
+					android:id="@+id/take_card_btn"
+					android:layout_width="wrap_content"
+					android:layout_height="80dp"
+					android:layout_marginRight="10dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:orientation="horizontal"
+					android:layout_weight="1"
+					android:background="@drawable/take_card_btn_bg"
+					android:clickable="true"
+					android:focusable="true">
+					<TextView
+						android:id="@+id/take_card_txt"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="center_horizontal|center_vertical"
+						android:text="Take a card"
+						android:textSize="18sp"
+						android:textColor="@color/colorPrimary" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/uno_call_btn"
+					android:layout_width="80dp"
+					android:layout_height="80dp"
+					android:gravity="center_horizontal|center_vertical"
+					android:orientation="vertical"
+					android:background="@drawable/draw_btn_bg"
+					android:clickable="true"
+					android:focusable="true">
+					<ImageView
+						android:id="@+id/uno_call_icon"
+						android:layout_width="40dp"
+						android:layout_height="40dp"
+						android:padding="8dp"
+						android:src="@drawable/ic_notify"
+						android:scaleType="fitCenter" />
+				</LinearLayout>
+			</LinearLayout>
+		</LinearLayout>
+		<LinearLayout
+			android:id="@+id/card_container"
+			android:layout_width="match_parent"
+			android:layout_height="120dp"
+			android:paddingTop="5dp"
+			android:paddingBottom="5dp"
+			android:gravity="center_horizontal|bottom"
+			android:orientation="horizontal" />
+		<LinearLayout
+			android:id="@+id/draw_card_btn"
+			android:layout_width="match_parent"
+			android:layout_height="80dp"
+			android:layout_marginLeft="20dp"
+			android:layout_marginTop="10dp"
+			android:layout_marginRight="20dp"
+			android:layout_marginBottom="4dp"
+			android:gravity="center_horizontal|center_vertical"
+			android:orientation="horizontal"
+			android:background="@drawable/draw_btn_bg"
+			android:clickable="true"
+			android:focusable="true">
+			<TextView
+				android:id="@+id/textview1"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_horizontal|center_vertical"
+				android:text="Draw a card"
+				android:textSize="18sp"
+				android:textColor="#FFFFFF" />
+		</LinearLayout>
+	</LinearLayout>
+</LinearLayout>
