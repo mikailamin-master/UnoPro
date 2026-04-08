@@ -1,20 +1,14 @@
 package pro.uno;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -22,7 +16,10 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-public class LobbyActivity extends Activity {
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+public class LobbyActivity extends BaseMaterialActivity {
 
     private EditText nameInput;
     private RadioGroup modeGroup;
@@ -31,10 +28,10 @@ public class LobbyActivity extends Activity {
     private TextView lobbyStatusTxt;
     private TextView connectionTxt;
     private TextView[] playerTxt;
-    private Button hostBtn;
-    private Button joinBtn;
-    private Button readyBtn;
-    private Button startBtn;
+    private MaterialButton hostBtn;
+    private MaterialButton joinBtn;
+    private MaterialButton readyBtn;
+    private MaterialButton startBtn;
 
     private ClientService client;
     private LanHostScanner hostScanner;
@@ -47,8 +44,6 @@ public class LobbyActivity extends Activity {
     private boolean allReady = false;
     private boolean amReady = false;
     private boolean launchingGame = false;
-    private String lastSnapshotJson = "";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +52,11 @@ public class LobbyActivity extends Activity {
         bindViews();
         setupButtons();
         updateLobbyUi(null);
+    }
+
+    @Override
+    protected int getRootViewId() {
+        return R.id.lobby_root;
     }
 
     private void bindViews() {
@@ -77,7 +77,7 @@ public class LobbyActivity extends Activity {
         readyBtn = findViewById(R.id.ready_btn);
         startBtn = findViewById(R.id.start_btn);
 
-        nameInput.setText("Player" + ((System.currentTimeMillis() / 1000) % 100));
+        nameInput.setText(getString(R.string.default_player_name, ((System.currentTimeMillis() / 1000) % 100)));
     }
 
     private void setupButtons() {
@@ -97,7 +97,7 @@ public class LobbyActivity extends Activity {
 
         readyBtn.setOnClickListener(v -> {
             if (client == null || !client.isConnected()) {
-                showToast("Join the lobby first.");
+                showToast(getString(R.string.toast_join_lobby_first));
                 return;
             }
             client.send("ready|" + (!amReady ? 1 : 0));
@@ -105,7 +105,7 @@ public class LobbyActivity extends Activity {
 
         startBtn.setOnClickListener(v -> {
             if (client == null || !client.isConnected()) {
-                showToast("Join the lobby first.");
+                showToast(getString(R.string.toast_join_lobby_first));
                 return;
             }
             client.send("start");
@@ -118,7 +118,7 @@ public class LobbyActivity extends Activity {
     private boolean prepareName() {
         myName = sanitizeName(nameInput.getText().toString());
         if (myName.isEmpty()) {
-            showToast("Enter your name.");
+            showToast(getString(R.string.toast_enter_name));
             return false;
         }
         return true;
@@ -131,10 +131,10 @@ public class LobbyActivity extends Activity {
     }
 
     private void showHostPlayerCountDialog() {
-        String[] items = new String[]{"2 Players", "3 Players", "4 Players"};
+        String[] items = getResources().getStringArray(R.array.player_count_options);
 
-        new AlertDialog.Builder(this)
-                .setTitle("How many players?")
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_how_many_players)
                 .setItems(items, (dialog, which) -> {
                     desiredPlayers = which + 2;
                     startHosting();
@@ -146,27 +146,27 @@ public class LobbyActivity extends Activity {
     private void showJoinIpDialog() {
         final EditText ipInput = new EditText(this);
         ipInput.setInputType(InputType.TYPE_CLASS_TEXT);
-        ipInput.setHint("Host LAN IP, ex: 192.168.0.10");
+        ipInput.setHint(R.string.host_lan_ip_hint);
 
-        new AlertDialog.Builder(this)
-                .setTitle("Join by IP")
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_join_by_ip)
                 .setView(ipInput)
                 .setCancelable(false)
-                .setPositiveButton("Join", (d, which) -> {
+                .setPositiveButton(R.string.join, (d, which) -> {
                     String ip = ipInput.getText().toString().trim();
                     if (ip.isEmpty()) {
-                        showToast("Please enter host IP.");
+                        showToast(getString(R.string.toast_enter_host_ip));
                         showJoinIpDialog();
                         return;
                     }
                     connectAsClient(ip, 0);
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
     private void scanAndJoinHost() {
-        lobbyStatusTxt.setText("Scanning LAN hosts...");
+        lobbyStatusTxt.setText(R.string.status_scanning_hosts);
         if (hostScanner == null) {
             hostScanner = new LanHostScanner();
         }
@@ -187,13 +187,13 @@ public class LobbyActivity extends Activity {
 
                     if (discovered.size() == 1) {
                         LanHostScanner.DiscoveredHost host = discovered.get(0);
-                        showToast("Found host " + host.name + " (" + host.ip + ")");
+                        showToast(getString(R.string.toast_found_host, host.name, host.ip));
                         connectAsClient(host.ip, 0);
                         return;
                     }
 
                     if (discovered.isEmpty()) {
-                        showToast("No host found on LAN.");
+                        showToast(getString(R.string.toast_no_host_found));
                         showJoinIpDialog();
                         return;
                     }
@@ -216,15 +216,22 @@ public class LobbyActivity extends Activity {
         String[] items = new String[discovered.size()];
         for (int i = 0; i < discovered.size(); i++) {
             LanHostScanner.DiscoveredHost host = discovered.get(i);
-            String state = host.started ? "running" : "lobby";
-            items[i] = host.name + "  (" + host.ip + ")  " + host.currentPlayers + "/" + host.targetPlayers + "  " + state;
+            String state = getString(host.started ? R.string.label_host_state_running : R.string.label_host_state_lobby);
+            items[i] = getString(
+                    R.string.label_host_selection,
+                    host.name,
+                    host.ip,
+                    host.currentPlayers,
+                    host.targetPlayers,
+                    state
+            );
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("Select Host")
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_select_host)
                 .setItems(items, (dialog, which) -> connectAsClient(discovered.get(which).ip, 0))
-                .setNegativeButton("Manual IP", (dialog, which) -> showJoinIpDialog())
-                .setPositiveButton("Rescan", (dialog, which) -> scanAndJoinHost())
+                .setNegativeButton(R.string.manual_ip, (dialog, which) -> showJoinIpDialog())
+                .setPositiveButton(R.string.rescan, (dialog, which) -> scanAndJoinHost())
                 .show();
     }
 
@@ -233,8 +240,8 @@ public class LobbyActivity extends Activity {
         UnoSession.setHostService(hostService);
         hostService.start_server(6000, desiredPlayers, myName);
 
-        connectionTxt.setText("Hosting on " + getLocalIpv4Address() + ":6000");
-        lobbyStatusTxt.setText("Waiting for players to connect...");
+        connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
+        lobbyStatusTxt.setText(R.string.status_waiting_players_connect);
         connectionTxt.postDelayed(() -> connectAsClient("127.0.0.1", desiredPlayers), 250);
     }
 
@@ -249,8 +256,8 @@ public class LobbyActivity extends Activity {
             @Override
             public void onConnected() {
                 runOnUiThread(() -> {
-                    connectionTxt.setText("Connected to " + ip + ":6000");
-                    lobbyStatusTxt.setText("Connected. Waiting for lobby state...");
+                    connectionTxt.setText(getString(R.string.status_connected_to, ip));
+                    lobbyStatusTxt.setText(R.string.status_connected_waiting_lobby);
                     hostBtn.setEnabled(false);
                     joinBtn.setEnabled(false);
                     nameInput.setEnabled(false);
@@ -271,9 +278,8 @@ public class LobbyActivity extends Activity {
                     allConnected = false;
                     allReady = false;
                     amReady = false;
-                    lastSnapshotJson = "";
-                    lobbyStatusTxt.setText("Disconnected from server.");
-                    connectionTxt.setText("Not connected");
+                    lobbyStatusTxt.setText(R.string.status_disconnected_server);
+                    connectionTxt.setText(R.string.connection_not_connected);
                     nameInput.setEnabled(true);
                     hostMode.setEnabled(true);
                     RadioButton joinRadio = findViewById(R.id.join_mode);
@@ -301,7 +307,6 @@ public class LobbyActivity extends Activity {
 
         if (msg.startsWith("snapshot|")) {
             String json = msg.substring(9);
-            lastSnapshotJson = json;
             parseSnapshot(json);
             return;
         }
@@ -315,24 +320,21 @@ public class LobbyActivity extends Activity {
 
     private void parseSnapshot(String json) {
         try {
-            JSONObject root = new JSONObject(json);
-            boolean started = root.optBoolean("started", false);
-            myId = root.optInt("youId", myId);
-            hostId = root.optInt("hostId", -1);
-            desiredPlayers = root.optInt("desiredPlayers", desiredPlayers);
-            allConnected = root.optBoolean("allConnected", false);
-            allReady = root.optBoolean("allReady", false);
+            LobbySnapshot snapshot = LobbySnapshot.fromJson(json, myId, desiredPlayers);
+            myId = snapshot.myId;
+            hostId = snapshot.hostId;
+            desiredPlayers = snapshot.desiredPlayers;
+            allConnected = snapshot.allConnected;
+            allReady = snapshot.allReady;
 
-            String status = root.optString("status", "");
-            if (!status.isEmpty()) {
-                lobbyStatusTxt.setText(status);
+            if (!snapshot.status.isEmpty()) {
+                lobbyStatusTxt.setText(snapshot.status);
             }
 
-            JSONArray players = root.optJSONArray("players");
             amReady = false;
-            updateLobbyUi(players);
+            updateLobbyUi(snapshot);
 
-            if (started && !launchingGame) {
+            if (snapshot.started && !launchingGame) {
                 launchingGame = true;
                 Intent intent = new Intent(this, GameActivity.class);
                 intent.putExtra(GameActivity.EXTRA_SNAPSHOT, json);
@@ -340,58 +342,39 @@ public class LobbyActivity extends Activity {
                 finish();
             }
         } catch (Exception e) {
-            showToast("Failed to parse lobby state.");
+            showToast(getString(R.string.toast_failed_parse_lobby));
         }
     }
 
-    private void updateLobbyUi(JSONArray players) {
-        lobbyTitleTxt.setText("Lobby " + currentLobbyCount(players) + "/" + desiredPlayers);
+    private void updateLobbyUi(LobbySnapshot snapshot) {
+        int lobbyCount = snapshot == null ? 0 : snapshot.players.size();
+        lobbyTitleTxt.setText(getString(R.string.lobby_title_format, lobbyCount, desiredPlayers));
 
         for (int i = 0; i < playerTxt.length; i++) {
-            if (players != null && i < players.length()) {
-                JSONObject player = players.optJSONObject(i);
-                if (player == null) {
-                    playerTxt[i].setText("Waiting for player...");
-                    continue;
-                }
-
-                int id = player.optInt("id", -1);
-                boolean ready = player.optBoolean("ready", false);
+            if (snapshot != null && i < snapshot.players.size()) {
+                LobbySnapshot.Player player = snapshot.players.get(i);
+                int id = player.id;
+                boolean ready = player.ready;
                 if (id == myId) {
                     amReady = ready;
                 }
 
-                String label = player.optString("name", "Player " + (i + 1));
-                if (id == hostId) {
-                    label += " (Host)";
-                }
-                label += ready ? "  - Ready" : "  - Waiting";
-                playerTxt[i].setText(label);
+                playerTxt[i].setText(LobbyUiFormatter.buildPlayerLabel(this, player.name, id, hostId, ready));
             } else {
-                playerTxt[i].setText("Waiting for player...");
+                playerTxt[i].setText(R.string.waiting_for_player);
             }
         }
 
         readyBtn.setEnabled(client != null && client.isConnected() && !launchingGame);
-        readyBtn.setText(amReady ? "Not Ready" : "Ready");
+        readyBtn.setText(amReady ? R.string.not_ready : R.string.ready);
 
         boolean isHost = myId > 0 && myId == hostId;
         startBtn.setVisibility(isHost ? View.VISIBLE : View.GONE);
         startBtn.setEnabled(isHost && allConnected && allReady);
 
         if (isHost) {
-            if (!allConnected) {
-                startBtn.setText("Waiting for Players");
-            } else if (!allReady) {
-                startBtn.setText("Waiting for Ready");
-            } else {
-                startBtn.setText("Start Game");
-            }
+            startBtn.setText(LobbyUiFormatter.buildStartButtonLabel(this, allConnected, allReady));
         }
-    }
-
-    private int currentLobbyCount(JSONArray players) {
-        return players == null ? 0 : players.length();
     }
 
     private String sanitizeName(String name) {
@@ -442,6 +425,6 @@ public class LobbyActivity extends Activity {
         } catch (Exception ignored) {
         }
 
-        return "LAN IP unknown";
+        return getString(R.string.lan_ip_unknown);
     }
 }

@@ -1,3 +1,105 @@
 <resources>
-	<string name="app_name">UNO</string>
+    <string name="app_name">UNO</string>
+
+    <string name="lobby_title_brand">UNO</string>
+    <string name="lobby_subtitle">Host fast LAN matches with a cleaner Material 3 lobby.</string>
+    <string name="connection_not_connected">Not connected</string>
+    <string name="player_name_hint">Player name</string>
+    <string name="host_mode">Host</string>
+    <string name="join_mode">Join</string>
+    <string name="create_lobby">Create Lobby</string>
+    <string name="join_lobby">Join Lobby</string>
+    <string name="lobby_title_format">Lobby %1$d/%2$d</string>
+    <string name="lobby_idle_status">Create or join a lobby to begin.</string>
+    <string name="waiting_for_player">Waiting for player...</string>
+    <string name="ready">Ready</string>
+    <string name="not_ready">Not Ready</string>
+    <string name="start_game">Start Game</string>
+    <string name="waiting_for_players">Waiting for Players</string>
+    <string name="waiting_for_ready">Waiting for Ready</string>
+
+    <string name="table_state">Table State</string>
+    <string name="waiting_for_game_state">Waiting for game state...</string>
+    <string name="top_card_fallback">Top: none | Color: -</string>
+    <string name="top_card_title">Top Card</string>
+    <string name="your_hand_title">Your Hand</string>
+    <string name="take_a_card">Take a Card</string>
+    <string name="uno_short">UNO</string>
+    <string name="penalty">Penalty</string>
+    <string name="play_selected_card">Play Selected Card</string>
+    <string name="player_name_default">Player %1$d</string>
+
+    <string name="dialog_how_many_players">How many players?</string>
+    <string name="players_2">2 Players</string>
+    <string name="players_3">3 Players</string>
+    <string name="players_4">4 Players</string>
+    <string name="dialog_join_by_ip">Join by IP</string>
+    <string name="host_lan_ip_hint">Host LAN IP, ex: 192.168.0.10</string>
+    <string name="join">Join</string>
+    <string name="cancel">Cancel</string>
+    <string name="manual_ip">Manual IP</string>
+    <string name="rescan">Rescan</string>
+    <string name="dialog_select_host">Select Host</string>
+    <string name="dialog_choose_color">Choose color</string>
+
+    <string name="color_red">red</string>
+    <string name="color_blue">blue</string>
+    <string name="color_green">green</string>
+    <string name="color_yellow">yellow</string>
+
+    <string name="toast_join_lobby_first">Join the lobby first.</string>
+    <string name="toast_enter_name">Enter your name.</string>
+    <string name="toast_enter_host_ip">Please enter host IP.</string>
+    <string name="toast_found_host">Found host %1$s (%2$s)</string>
+    <string name="toast_no_host_found">No host found on LAN.</string>
+    <string name="toast_failed_parse_lobby">Failed to parse lobby state.</string>
+    <string name="toast_connection_closed">Connection closed.</string>
+    <string name="toast_wait_turn">Wait for your turn.</string>
+    <string name="toast_uno_only_one_card">UNO can be called only with one card.</string>
+    <string name="toast_failed_parse_game">Failed to parse game state.</string>
+    <string name="toast_penalty_invalid">Penalty not valid now.</string>
+    <string name="toast_select_card_first">Select a card first.</string>
+    <string name="toast_not_connected">Not connected.</string>
+
+    <string name="status_scanning_hosts">Scanning LAN hosts...</string>
+    <string name="status_waiting_players_connect">Waiting for players to connect...</string>
+    <string name="status_connected_waiting_lobby">Connected. Waiting for lobby state...</string>
+    <string name="status_disconnected_server">Disconnected from server.</string>
+    <string name="status_hosting_on">Hosting on %1$s:6000</string>
+    <string name="status_connected_to">Connected to %1$s:6000</string>
+    <string name="status_turn_you">Your turn.</string>
+    <string name="status_turn_player">Player %1$d turn.</string>
+    <string name="status_top_card">Top: %1$s | Color: %2$s</string>
+    <string name="status_top_card_active_color">Top: %1$s | Active color: %2$s</string>
+    <string name="status_player_cards_count">has %1$d %2$s</string>
+    <string name="status_player_cards_count_uno">has %1$d %2$s (UNO)</string>
+    <string name="card_count_singular">card</string>
+    <string name="card_count_plural">cards</string>
+
+    <string name="label_host_suffix">%1$s (Host)</string>
+    <string name="label_player_ready">%1$s  - Ready</string>
+    <string name="label_player_waiting">%1$s  - Waiting</string>
+    <string name="label_host_selection">%1$s  (%2$s)  %3$d/%4$d  %5$s</string>
+    <string name="label_host_state_running">running</string>
+    <string name="label_host_state_lobby">lobby</string>
+
+    <string name="default_player_name">Player%1$d</string>
+    <string name="default_host_name">UNO Host</string>
+    <string name="lan_ip_unknown">LAN IP unknown</string>
+    <string name="top_none">none</string>
+    <string name="card_super_plus">super plus</string>
+    <string name="card_super_color">super color</string>
+
+    <string-array name="player_count_options">
+        <item>@string/players_2</item>
+        <item>@string/players_3</item>
+        <item>@string/players_4</item>
+    </string-array>
+
+    <string-array name="wild_color_options">
+        <item>@string/color_red</item>
+        <item>@string/color_blue</item>
+        <item>@string/color_green</item>
+        <item>@string/color_yellow</item>
+    </string-array>
 </resources>

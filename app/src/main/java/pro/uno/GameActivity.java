@@ -312,7 +312,7 @@ public class GameActivity extends BaseMaterialActivity {
         }
 
         int cardWidth = dpToPx(70);
-        int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(40);
+        int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(64);
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
         int minVisibleWidth = dpToPx(24);

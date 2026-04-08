@@ -1,0 +1,29 @@
+<resources>
+    <dimen name="screen_padding">20dp</dimen>
+    <dimen name="screen_padding_small">16dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">12dp</dimen>
+    <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_xl">20dp</dimen>
+    <dimen name="space_2xl">24dp</dimen>
+    <dimen name="card_corner_radius">28dp</dimen>
+    <dimen name="button_corner_radius">22dp</dimen>
+    <dimen name="button_min_height">56dp</dimen>
+    <dimen name="button_compact_min_height">48dp</dimen>
+    <dimen name="text_input_corner_radius">24dp</dimen>
+    <dimen name="stroke_width">1dp</dimen>
+
+    <dimen name="uno_card_width">70dp</dimen>
+    <dimen name="uno_card_height">90dp</dimen>
+    <dimen name="uno_card_preview_width">110dp</dimen>
+    <dimen name="uno_card_preview_height">150dp</dimen>
+    <dimen name="uno_card_corner_padding_h">10dp</dimen>
+    <dimen name="uno_card_corner_padding_v">6dp</dimen>
+    <dimen name="uno_card_number_corner_text">14sp</dimen>
+    <dimen name="uno_card_number_center_text">22sp</dimen>
+    <dimen name="uno_card_icon_small">20dp</dimen>
+    <dimen name="uno_card_icon_large">40dp</dimen>
+
+    <dimen name="system_bar_scrim">0dp</dimen>
+</resources>

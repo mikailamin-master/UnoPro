@@ -1,16 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="purple_200">#FFBB86FC</color>
-	<color name="purple_500">#FF6200EE</color>
-	<color name="purple_700">#FF3700B3</color>
-	<color name="teal_200">#FF03DAC5</color>
-	<color name="teal_700">#FF018786</color>
-	<color name="black">#FF000000</color>
-	<color name="white">#FFFFFFFF</color>
-	<color name="colorPrimary">#FF6200EE</color>
-	<color name="colorPrimaryVariant">#FF3700B3</color>
-	<color name="colorOnPrimary">#FFFFFFFF</color>
-	<color name="colorSecondary">#FF03DAC5</color>
-	<color name="colorSecondaryVariant">#FF018786</color>
-	<color name="colorOnSecondary">#FF000000</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="surface_background">#FFFFFFFF</color>
+    <color name="surface_background_dark">#121212</color>
+
+    <color name="md_theme_light_primary">#8A2E18</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#FFDCCF</color>
+    <color name="md_theme_light_onPrimaryContainer">#331108</color>
+    <color name="md_theme_light_secondary">#6F5B40</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#FADEBC</color>
+    <color name="md_theme_light_onSecondaryContainer">#271904</color>
+    <color name="md_theme_light_tertiary">#496548</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#CAEBC6</color>
+    <color name="md_theme_light_onTertiaryContainer">#062109</color>
+    <color name="md_theme_light_error">#BA1A1A</color>
+    <color name="md_theme_light_background">@color/surface_background</color>
+    <color name="md_theme_light_onBackground">#1C1B1A</color>
+    <color name="md_theme_light_surface">@color/surface_background</color>
+    <color name="md_theme_light_onSurface">#1C1B1A</color>
+    <color name="md_theme_light_surfaceVariant">#F2F2F2</color>
+    <color name="md_theme_light_onSurfaceVariant">#4A4A4A</color>
+    <color name="md_theme_light_outline">#7A7A7A</color>
+
+    <color name="colorPrimary">@color/md_theme_light_primary</color>
+    <color name="colorOnPrimary">@color/md_theme_light_onPrimary</color>
+    <color name="colorPrimaryVariant">@color/md_theme_light_primaryContainer</color>
+    <color name="colorSecondary">@color/md_theme_light_secondary</color>
+    <color name="colorOnSecondary">@color/md_theme_light_onSecondary</color>
+    <color name="colorSecondaryVariant">@color/md_theme_light_secondaryContainer</color>
+
+    <color name="card_red">#E53935</color>
+    <color name="card_blue">#1E88E5</color>
+    <color name="card_green">#43A047</color>
+    <color name="card_yellow">#FDD835</color>
+    <color name="card_unknown">#212121</color>
+    <color name="card_foreground">@color/white</color>
 </resources>

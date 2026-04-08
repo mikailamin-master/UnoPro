@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <corners android:radius="10dp"/>
+    <corners android:radius="@dimen/uno_card_corner_padding_h"/>
     <stroke
         android:width="2dp"
-        android:color="#ffffff"/>
-    <solid android:color="#ECD407"/>
+        android:color="@color/card_foreground"/>
+    <solid android:color="@color/card_yellow"/>
 </shape>

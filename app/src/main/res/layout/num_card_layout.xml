@@ -1,45 +1,47 @@
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content"
-	android:orientation="vertical">
-	<LinearLayout
-		android:id="@+id/card_bg"
-		android:layout_width="70dp"
-		android:layout_height="90dp"
-		android:orientation="vertical">
-		<TextView
-			android:id="@+id/num_tl"
-			android:focusable="false"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:paddingLeft="10dp"
-			android:paddingTop="6dp"
-			android:text="0"
-			android:textSize="14sp"
-			android:textColor="#FFFFFF" />
-		<TextView
-			android:id="@+id/num"
-			android:focusable="false"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:gravity="center_horizontal|center_vertical"
-			android:text="0"
-			android:textSize="22sp"
-			android:textColor="#FFFFFF"
-			android:layout_weight="1" />
-		<TextView
-			android:id="@+id/num_br"
-			android:focusable="false"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:paddingRight="10dp"
-			android:paddingBottom="6dp"
-			android:gravity="right"
-			android:text="0"
-			android:textSize="14sp"
-			android:textColor="#FFFFFF" />
-	</LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/card_bg"
+        android:layout_width="@dimen/uno_card_width"
+        android:layout_height="@dimen/uno_card_height"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/num_tl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:paddingStart="@dimen/uno_card_corner_padding_h"
+            android:paddingTop="@dimen/uno_card_corner_padding_v"
+            android:textColor="@color/card_foreground"
+            android:textSize="@dimen/uno_card_number_corner_text"
+            tools:text="0" />
+
+        <TextView
+            android:id="@+id/num"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:focusable="false"
+            android:gravity="center"
+            android:textColor="@color/card_foreground"
+            android:textSize="@dimen/uno_card_number_center_text"
+            tools:text="0" />
+
+        <TextView
+            android:id="@+id/num_br"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:gravity="end"
+            android:paddingEnd="@dimen/uno_card_corner_padding_h"
+            android:paddingBottom="@dimen/uno_card_corner_padding_v"
+            android:textColor="@color/card_foreground"
+            android:textSize="@dimen/uno_card_number_corner_text"
+            tools:text="0" />
+    </LinearLayout>
 </LinearLayout>

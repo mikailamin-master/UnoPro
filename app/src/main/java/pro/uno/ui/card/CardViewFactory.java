@@ -42,10 +42,10 @@ public class CardViewFactory {
         return card;
     }
 
-    // Power +2 cards are intentionally rendered as number cards with "+2" text.
+    // Power +2 and super +4 cards are intentionally rendered as number cards with "+2" and "+4" text.
     private boolean shouldUseNumberLayout(Card card) {
         return "card".equals(card.getFamily())
-                || ("power".equals(card.getFamily()) && "plus".equals(card.getValue()));
+                || "plus".equals(card.getValue());
     }
 
     private void applyCardSize(View cardBg, View card, boolean large) {
@@ -76,10 +76,18 @@ public class CardViewFactory {
         TextView numTl = card.findViewById(R.id.num_tl);
         TextView numCenter = card.findViewById(R.id.num);
         TextView numBr = card.findViewById(R.id.num_br);
+        
+        String value = "";
 
-        String value = ("power".equals(cardData.getFamily()) && "plus".equals(cardData.getValue()))
-                ? "+2"
-                : cardData.getValue().isEmpty() ? "?" : cardData.getValue();
+        if ("power".equals(cardData.getFamily()) && "plus".equals(cardData.getValue())) {
+            value = "+2";
+        } else if ("super".equals(cardData.getFamily()) && "plus".equals(cardData.getValue())) {
+            value = "+4";
+        } else if (cardData.getValue().isEmpty()) {
+            value = "?";
+        } else {
+            value = cardData.getValue();
+        }
 
         numTl.setText(value);
         numCenter.setText(value);
@@ -135,9 +143,6 @@ public class CardViewFactory {
         if ("block".equals(action)) {
             return R.drawable.ic_block;
         }
-        if ("plus".equals(action)) {
-            return R.drawable.ic_token;
-        }
         if ("color".equals(action)) {
             return R.drawable.ic_color;
         }
@@ -190,7 +195,7 @@ public class CardViewFactory {
     }
 
     private void applyLargePreviewMargins(View card, View cardBg) {
-        cardBg.setElevation(dpToPx(8));
+        cardBg.setElevation(dpToPx(0));
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT

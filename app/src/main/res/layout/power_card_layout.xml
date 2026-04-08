@@ -1,56 +1,61 @@
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content"
-	android:orientation="vertical">
-	<LinearLayout
-		android:id="@+id/card_bg"
-		android:layout_width="70dp"
-		android:layout_height="90dp"
-		android:background="#000000"
-		android:orientation="vertical">
-		<ImageView
-			android:id="@+id/icon_tl"
-			android:focusable="false"
-			android:layout_width="20dp"
-			android:layout_height="20dp"
-			android:layout_marginLeft="10dp"
-			android:layout_marginTop="6dp"
-			android:padding="2dp"
-			android:src="@drawable/ic_reverse"
-			android:scaleType="fitCenter" />
-		<LinearLayout
-			android:id="@+id/space"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:gravity="center_horizontal|center_vertical"
-			android:orientation="horizontal"
-			android:layout_weight="1">
-			<LinearLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:gravity="center_horizontal|center_vertical"
-				android:orientation="vertical">
-				<ImageView
-					android:id="@+id/icon"
-					android:focusable="false"
-					android:layout_width="40dp"
-					android:layout_height="40dp"
-					android:padding="6dp"
-					android:src="@drawable/ic_reverse"
-					android:scaleType="fitCenter" />
-			</LinearLayout>
-		</LinearLayout>
-		<ImageView
-			android:id="@+id/icon_br"
-			android:focusable="false"
-			android:layout_width="20dp"
-			android:layout_height="20dp"
-			android:layout_marginRight="10dp"
-			android:layout_marginBottom="6dp"
-			android:padding="2dp"
-			android:src="@drawable/ic_reverse"
-			android:scaleType="fitCenter"
-			android:layout_gravity="right" />
-	</LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/card_bg"
+        android:layout_width="@dimen/uno_card_width"
+        android:layout_height="@dimen/uno_card_height"
+        android:background="@color/card_unknown"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/icon_tl"
+            android:layout_width="@dimen/uno_card_icon_small"
+            android:layout_height="@dimen/uno_card_icon_small"
+            android:layout_marginStart="@dimen/uno_card_corner_padding_h"
+            android:layout_marginTop="@dimen/uno_card_corner_padding_v"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_reverse" />
+
+        <LinearLayout
+            android:id="@+id/space"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/icon"
+                    android:layout_width="@dimen/uno_card_icon_large"
+                    android:layout_height="@dimen/uno_card_icon_large"
+                    android:focusable="false"
+                    android:padding="@dimen/uno_card_corner_padding_v"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_reverse" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/icon_br"
+            android:layout_width="@dimen/uno_card_icon_small"
+            android:layout_height="@dimen/uno_card_icon_small"
+            android:layout_gravity="end"
+            android:layout_marginEnd="@dimen/uno_card_corner_padding_h"
+            android:layout_marginBottom="@dimen/uno_card_corner_padding_v"
+            android:focusable="false"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_reverse" />
+    </LinearLayout>
 </LinearLayout>
