@@ -315,12 +315,12 @@ public class GameActivity extends BaseMaterialActivity {
         int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(64);
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
-        int minVisibleWidth = dpToPx(24);
 
-        if (totalCards > 1 && totalWidth > screenWidth) {
-            overlap = (totalWidth - screenWidth) / (totalCards - 1);
-            overlap = Math.min(overlap, Math.max(0, cardWidth - minVisibleWidth));
+        if (totalWidth > screenWidth) {
+	        overlap = (totalWidth - screenWidth) / (totalCards - 1);
         }
+        
+        overlap = Math.min(overlap, cardWidth);
 
         markedCardId = -1;
         lastMarkedCard = null;
@@ -340,7 +340,6 @@ public class GameActivity extends BaseMaterialActivity {
 
             card.setLayoutParams(params);
             card.setElevation(i);
-            card.setTranslationZ(i);
 
             int cardIndex = i;
             card.setOnClickListener(v -> {
@@ -360,8 +359,6 @@ public class GameActivity extends BaseMaterialActivity {
                 markedCardId = cardIndex;
                 lastMarkedCard = card;
                 card.animate().translationY(-dpToPx(20)).setDuration(120).start();
-                card.setTranslationZ(totalCards + 10f);
-                card.bringToFront();
             });
 
             cardContainer.addView(card);
