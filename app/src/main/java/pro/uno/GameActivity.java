@@ -1,7 +1,5 @@
 package pro.uno;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,28 +8,27 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import pro.uno.ui.card.CardViewFactory;
 
-public class GameActivity extends Activity {
+public class GameActivity extends BaseMaterialActivity {
 
     public static final String EXTRA_SNAPSHOT = "snapshot";
 
-    private LinearLayout top;
     private LinearLayout topCardPreview;
     private LinearLayout cardContainer;
-    private LinearLayout drawCardBtn;
-    private LinearLayout takeCardBtn;
-    private LinearLayout unoCallBtn;
+    private MaterialButton drawCardBtn;
+    private MaterialButton takeCardBtn;
+    private MaterialButton unoCallBtn;
 
     private LinearLayout[] playerRows;
     private TextView[] playerNameTxt;
     private TextView[] playerCardsTxt;
-    private LinearLayout[] penaltyBtns;
+    private MaterialButton[] penaltyBtns;
 
     private TextView statusTxt;
     private TextView topCardTxt;
@@ -68,13 +65,17 @@ public class GameActivity extends Activity {
         if (snapshot != null && !snapshot.isEmpty()) {
             parseSnapshot(snapshot);
         } else {
-            statusTxt.setText("Waiting for game state...");
-            topCardTxt.setText("Top: none | Color: -");
+            statusTxt.setText(R.string.waiting_for_game_state);
+            topCardTxt.setText(R.string.top_card_fallback);
         }
     }
 
+    @Override
+    protected int getRootViewId() {
+        return R.id.game_root;
+    }
+
     private void bindViews() {
-        top = findViewById(R.id.top);
         topCardPreview = findViewById(R.id.top_card_preview);
         cardContainer = findViewById(R.id.card_container);
         drawCardBtn = findViewById(R.id.draw_card_btn);
@@ -99,24 +100,14 @@ public class GameActivity extends Activity {
                 findViewById(R.id.p3_cards_txt)
         };
 
-        penaltyBtns = new LinearLayout[]{
+        penaltyBtns = new MaterialButton[]{
                 findViewById(R.id.penalty_p1),
                 findViewById(R.id.penalty_p2),
                 findViewById(R.id.penalty_p3)
         };
 
-        statusTxt = new TextView(this);
-        statusTxt.setTextSize(15f);
-        statusTxt.setTextColor(getResources().getColor(android.R.color.white));
-        statusTxt.setPadding(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(2));
-
-        topCardTxt = new TextView(this);
-        topCardTxt.setTextSize(13f);
-        topCardTxt.setTextColor(getResources().getColor(android.R.color.white));
-        topCardTxt.setPadding(dpToPx(8), dpToPx(2), dpToPx(8), dpToPx(4));
-
-        top.addView(statusTxt);
-        top.addView(topCardTxt);
+        statusTxt = findViewById(R.id.status_txt);
+        topCardTxt = findViewById(R.id.top_card_status_txt);
     }
 
     private void bindClientListener() {
@@ -143,7 +134,7 @@ public class GameActivity extends Activity {
                     currentTurnId = -1;
                     updateActionButtons();
                     showStatus("Disconnected from server.");
-                    showToast("Connection closed.");
+                    showToast(getString(R.string.toast_connection_closed));
                 });
             }
 
@@ -159,7 +150,7 @@ public class GameActivity extends Activity {
 
         takeCardBtn.setOnClickListener(v -> {
             if (!isMyTurn()) {
-                showToast("Wait for your turn.");
+                showToast(getString(R.string.toast_wait_turn));
                 return;
             }
             sendToServer("draw");
@@ -169,7 +160,7 @@ public class GameActivity extends Activity {
             if (receivedCardList.size() == 1) {
                 sendToServer("uno");
             } else {
-                showToast("UNO can be called only with one card.");
+                showToast(getString(R.string.toast_uno_only_one_card));
             }
         });
 
@@ -209,29 +200,16 @@ public class GameActivity extends Activity {
 
     private void parseSnapshot(String json) {
         try {
-            JSONObject root = new JSONObject(json);
+            GameSnapshot snapshot = GameSnapshot.fromJson(json, myId);
+            started = snapshot.started;
+            myId = snapshot.myId;
+            currentTurnId = snapshot.currentTurnId;
+            topCard = snapshot.topCard;
+            currentColor = snapshot.currentColor;
 
-            started = root.optBoolean("started", false);
-            myId = root.optInt("youId", myId);
-            currentTurnId = root.optInt("currentTurnId", -1);
-            topCard = normalizeCard(root.optString("topCard", ""));
-            currentColor = root.optString("currentColor", "");
-
-            String status = root.optString("status", "");
-            if (!status.isEmpty()) {
-                showStatus(status);
-            }
-
+            showStatus(snapshot.status);
             receivedCardList.clear();
-            JSONArray hand = root.optJSONArray("myHand");
-            if (hand != null) {
-                for (int i = 0; i < hand.length(); i++) {
-                    String card = normalizeCard(hand.optString(i, ""));
-                    if (!card.isEmpty()) {
-                        receivedCardList.add(card);
-                    }
-                }
-            }
+            receivedCardList.addAll(snapshot.myHand);
 
             for (int i = 0; i < 3; i++) {
                 opponentPlayerIds[i] = -1;
@@ -240,35 +218,18 @@ public class GameActivity extends Activity {
             }
 
             int opponentSlot = 0;
-            JSONArray players = root.optJSONArray("players");
-            if (players != null) {
-                for (int i = 0; i < players.length(); i++) {
-                    JSONObject p = players.optJSONObject(i);
-                    if (p == null) {
-                        continue;
-                    }
+            for (GameSnapshot.Opponent opponent : snapshot.opponents) {
+                if (opponentSlot < 3) {
+                    opponentPlayerIds[opponentSlot] = opponent.id;
+                    opponentUno[opponentSlot] = opponent.unoCalled;
+                    opponentCardCounts[opponentSlot] = opponent.cardCount;
 
-                    int id = p.optInt("id", -1);
-                    if (id == myId) {
-                        continue;
-                    }
-
-                    if (opponentSlot < 3) {
-                        opponentPlayerIds[opponentSlot] = id;
-                        opponentUno[opponentSlot] = p.optBoolean("uno", false);
-                        opponentCardCounts[opponentSlot] = p.optInt("cards", 0);
-
-                        String name = p.optString("name", "Player " + id);
-                        String cardsText = "has " + opponentCardCounts[opponentSlot] + " cards";
-                        if (opponentUno[opponentSlot]) {
-                            cardsText += " (UNO)";
-                        }
-
-                        playerNameTxt[opponentSlot].setText(name);
-                        playerCardsTxt[opponentSlot].setText(cardsText);
-                        playerRows[opponentSlot].setVisibility(View.VISIBLE);
-                        opponentSlot++;
-                    }
+                    playerNameTxt[opponentSlot].setText(opponent.name);
+                    playerCardsTxt[opponentSlot].setText(
+                            GameUiFormatter.buildOpponentCardsText(this, opponent.cardCount, opponent.unoCalled)
+                    );
+                    playerRows[opponentSlot].setVisibility(View.VISIBLE);
+                    opponentSlot++;
                 }
             }
 
@@ -276,12 +237,12 @@ public class GameActivity extends Activity {
                 playerRows[i].setVisibility(View.GONE);
             }
 
-            topCardTxt.setText(buildTopCardStatusText());
+            topCardTxt.setText(CardFormatter.buildTopCardStatusText(this, topCard, currentColor));
             renderTopCardPreview();
             arrangeCards(receivedCardList);
             updateActionButtons();
         } catch (Exception e) {
-            showToast("Failed to parse game state.");
+            showToast(getString(R.string.toast_failed_parse_game));
         }
     }
 
@@ -294,22 +255,22 @@ public class GameActivity extends Activity {
         if (opponentCardCounts[slot] == 1 && !opponentUno[slot]) {
             sendToServer("penalty|" + pid);
         } else {
-            showToast("Penalty not valid now.");
+            showToast(getString(R.string.toast_penalty_invalid));
         }
     }
 
     private void onPlaySelectedCard() {
         if (!isMyTurn()) {
-            showToast("Wait for your turn.");
+            showToast(getString(R.string.toast_wait_turn));
             return;
         }
 
         if (markedCardId < 0 || markedCardId >= receivedCardList.size()) {
-            showToast("Select a card first.");
+            showToast(getString(R.string.toast_select_card_first));
             return;
         }
 
-        String card = normalizeCard(receivedCardList.get(markedCardId));
+        String card = CardFormatter.normalize(receivedCardList.get(markedCardId));
         if (card.startsWith("super_")) {
             showColorPicker(card);
         } else {
@@ -318,10 +279,10 @@ public class GameActivity extends Activity {
     }
 
     private void showColorPicker(String card) {
-        String[] colors = new String[]{"red", "blue", "green", "yellow"};
+        String[] colors = getResources().getStringArray(R.array.wild_color_options);
 
-        new AlertDialog.Builder(this)
-                .setTitle("Choose color")
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_choose_color)
                 .setItems(colors, (dialog, which) -> sendToServer("play|" + card + "|" + colors[which]))
                 .show();
     }
@@ -332,12 +293,16 @@ public class GameActivity extends Activity {
 
     private void updateActionButtons() {
         boolean active = isMyTurn();
-        drawCardBtn.setAlpha(active ? 1f : 0.6f);
-        takeCardBtn.setAlpha(active ? 1f : 0.6f);
+        drawCardBtn.setEnabled(active);
+        takeCardBtn.setEnabled(active);
+        drawCardBtn.setAlpha(active ? 1f : 0.7f);
+        takeCardBtn.setAlpha(active ? 1f : 0.7f);
     }
 
     private void arrangeCards(ArrayList<String> cardList) {
         cardContainer.removeAllViews();
+        cardContainer.setClipChildren(false);
+        cardContainer.setClipToPadding(false);
 
         int totalCards = cardList.size();
         if (totalCards == 0) {
@@ -350,10 +315,11 @@ public class GameActivity extends Activity {
         int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(40);
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
+        int minVisibleWidth = dpToPx(24);
 
         if (totalCards > 1 && totalWidth > screenWidth) {
             overlap = (totalWidth - screenWidth) / (totalCards - 1);
-            overlap = Math.min(overlap, cardWidth);
+            overlap = Math.min(overlap, Math.max(0, cardWidth - minVisibleWidth));
         }
 
         markedCardId = -1;
@@ -374,29 +340,34 @@ public class GameActivity extends Activity {
 
             card.setLayoutParams(params);
             card.setElevation(i);
+            card.setTranslationZ(i);
 
             int cardIndex = i;
             card.setOnClickListener(v -> {
                 if (markedCardId == cardIndex) {
                     if (lastMarkedCard != null) {
-                        lastMarkedCard.animate().translationY(0).setDuration(120);
+                        resetCardSelection(lastMarkedCard, cardIndex);
                     }
                     markedCardId = -1;
                     lastMarkedCard = null;
                     return;
                 }
 
-                markedCardId = cardIndex;
                 if (lastMarkedCard != null) {
-                    lastMarkedCard.animate().translationY(0).setDuration(120);
+                    resetCardSelection(lastMarkedCard, markedCardId);
                 }
 
+                markedCardId = cardIndex;
                 lastMarkedCard = card;
-                card.animate().translationY(-dpToPx(20)).setDuration(120);
+                card.animate().translationY(-dpToPx(20)).setDuration(120).start();
+                card.setTranslationZ(totalCards + 10f);
+                card.bringToFront();
             });
 
             cardContainer.addView(card);
         }
+
+        cardContainer.requestLayout();
     }
 
     private void renderTopCardPreview() {
@@ -410,74 +381,20 @@ public class GameActivity extends Activity {
     }
 
     private View createCardView(String data, ViewGroup parent, boolean large) {
-        return cardViewFactory.createCardView(normalizeCard(data), parent, large);
-    }
-
-    private String normalizeCard(String card) {
-        if (card == null) {
-            return "";
-        }
-
-        String[] parts = card.trim().split("_");
-        if (parts.length < 3) {
-            return card.trim();
-        }
-
-        String family = parts[0];
-        String color = parts[1];
-        String value = parts[2];
-
-        if ("super".equals(family)) {
-            return "super_black_" + value;
-        }
-
-        if (("card".equals(family) || "power".equals(family)) && "black".equals(color)) {
-            return "";
-        }
-
-        return family + "_" + color + "_" + value;
-    }
-
-    private String buildTopCardStatusText() {
-        String label = "Top: " + humanCard(topCard);
-        if (topCard != null && topCard.startsWith("super_")) {
-            return label + " | Active color: " + currentColor;
-        }
-        return label + " | Color: " + currentColor;
+        return cardViewFactory.createCardView(CardFormatter.normalize(data), parent, large);
     }
 
     private void sendToServer(String msg) {
         if (client != null && client.isConnected()) {
             client.send(msg);
         } else {
-            showToast("Not connected.");
+            showToast(getString(R.string.toast_not_connected));
         }
-    }
-
-    private String humanCard(String card) {
-        if (card == null || card.isEmpty()) {
-            return "none";
-        }
-
-        if ("super_black_plus".equals(card)) {
-            return "super plus";
-        }
-
-        if ("super_black_color".equals(card)) {
-            return "super color";
-        }
-
-        return card.replace("_", " ");
     }
 
     private void showStatus(String text) {
-        if (started && isMyTurn()) {
-            statusTxt.setText("Your turn. " + text);
-        } else if (started && currentTurnId > 0) {
-            statusTxt.setText("Player " + currentTurnId + " turn. " + text);
-        } else {
-            statusTxt.setText(text);
-        }
+        statusTxt.setText(CardFormatter.buildTurnStatusText(this, started, currentTurnId, myId, text));
+        topCardTxt.setText(CardFormatter.buildTopCardStatusText(this, topCard, currentColor));
     }
 
     private void showToast(String msg) {
@@ -486,6 +403,14 @@ public class GameActivity extends Activity {
 
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
+    }
+
+    private void resetCardSelection(View card, int cardIndex) {
+        if (card == null) {
+            return;
+        }
+        card.animate().translationY(0).setDuration(120).start();
+        card.setTranslationZ(Math.max(0, cardIndex));
     }
 
     private void goBackToLobby() {

@@ -9,6 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import pro.uno.R;
+import pro.uno.cards.Card;
+import pro.uno.cards.CardRegistry;
 
 public class CardViewFactory {
 
@@ -19,8 +21,8 @@ public class CardViewFactory {
     }
 
     public View createCardView(String data, ViewGroup parent, boolean large) {
-        String[] parts = splitCard(data);
-        boolean useNumberLayout = shouldUseNumberLayout(parts);
+        Card cardData = CardRegistry.create(data);
+        boolean useNumberLayout = shouldUseNumberLayout(cardData);
 
         View card = LayoutInflater.from(context).inflate(
                 useNumberLayout ? R.layout.num_card_layout : R.layout.power_card_layout,
@@ -30,8 +32,8 @@ public class CardViewFactory {
 
         View cardBg = card.findViewById(R.id.card_bg);
         applyCardSize(cardBg, card, large);
-        bindCardFace(card, parts, useNumberLayout, large);
-        bindCardBackground(cardBg, safePart(parts, 0), safePart(parts, 1));
+        bindCardFace(card, cardData, useNumberLayout, large);
+        bindCardBackground(cardBg, cardData);
 
         if (large) {
             applyLargePreviewMargins(card, cardBg);
@@ -40,18 +42,10 @@ public class CardViewFactory {
         return card;
     }
 
-    private String[] splitCard(String data) {
-        if (data == null) {
-            return new String[0];
-        }
-        return data.split("_");
-    }
-
     // Power +2 cards are intentionally rendered as number cards with "+2" text.
-    private boolean shouldUseNumberLayout(String[] parts) {
-        String family = safePart(parts, 0);
-        String action = safePart(parts, 2);
-        return "card".equals(family) || ("power".equals(family) && "plus".equals(action));
+    private boolean shouldUseNumberLayout(Card card) {
+        return "card".equals(card.getFamily())
+                || ("power".equals(card.getFamily()) && "plus".equals(card.getValue()));
     }
 
     private void applyCardSize(View cardBg, View card, boolean large) {
@@ -70,24 +64,22 @@ public class CardViewFactory {
         }
     }
 
-    private void bindCardFace(View card, String[] parts, boolean useNumberLayout, boolean large) {
+    private void bindCardFace(View card, Card cardData, boolean useNumberLayout, boolean large) {
         if (useNumberLayout) {
-            bindNumberFace(card, parts, large);
+            bindNumberFace(card, cardData, large);
             return;
         }
-        bindPowerFace(card, parts, large);
+        bindPowerFace(card, cardData, large);
     }
 
-    private void bindNumberFace(View card, String[] parts, boolean large) {
+    private void bindNumberFace(View card, Card cardData, boolean large) {
         TextView numTl = card.findViewById(R.id.num_tl);
         TextView numCenter = card.findViewById(R.id.num);
         TextView numBr = card.findViewById(R.id.num_br);
 
-        String family = safePart(parts, 0);
-        String action = safePart(parts, 2);
-        String value = ("power".equals(family) && "plus".equals(action))
+        String value = ("power".equals(cardData.getFamily()) && "plus".equals(cardData.getValue()))
                 ? "+2"
-                : safePart(parts, 2, "?");
+                : cardData.getValue().isEmpty() ? "?" : cardData.getValue();
 
         numTl.setText(value);
         numCenter.setText(value);
@@ -117,12 +109,12 @@ public class CardViewFactory {
         numBr.setPadding(0, 0, dpToPx(horizontalPaddingDp), dpToPx(verticalPaddingDp));
     }
 
-    private void bindPowerFace(View card, String[] parts, boolean large) {
+    private void bindPowerFace(View card, Card cardData, boolean large) {
         ImageView iconTl = card.findViewById(R.id.icon_tl);
         ImageView icon = card.findViewById(R.id.icon);
         ImageView iconBr = card.findViewById(R.id.icon_br);
 
-        int iconRes = resolvePowerIcon(safePart(parts, 2));
+        int iconRes = resolvePowerIcon(cardData.getValue());
         iconTl.setImageResource(iconRes);
         icon.setImageResource(iconRes);
         iconBr.setImageResource(iconRes);
@@ -179,17 +171,17 @@ public class CardViewFactory {
         iconView.setPadding(iconPadding, iconPadding, iconPadding, iconPadding);
     }
 
-    private void bindCardBackground(View cardBg, String family, String color) {
+    private void bindCardBackground(View cardBg, Card cardData) {
         int bgRes;
-        if ("super".equals(family) || "black".equals(color)) {
+        if (cardData.isWild() || "black".equals(cardData.getColor())) {
             bgRes = R.drawable.card_unknown_bg;
-        } else if ("red".equals(color)) {
+        } else if ("red".equals(cardData.getColor())) {
             bgRes = R.drawable.card_red_bg;
-        } else if ("blue".equals(color)) {
+        } else if ("blue".equals(cardData.getColor())) {
             bgRes = R.drawable.card_blue_bg;
-        } else if ("green".equals(color)) {
+        } else if ("green".equals(cardData.getColor())) {
             bgRes = R.drawable.card_green_bg;
-        } else if ("yellow".equals(color)) {
+        } else if ("yellow".equals(cardData.getColor())) {
             bgRes = R.drawable.card_yellow_bg;
         } else {
             bgRes = R.drawable.card_unknown_bg;
@@ -206,14 +198,6 @@ public class CardViewFactory {
         params.topMargin = dpToPx(12);
         params.bottomMargin = dpToPx(18);
         card.setLayoutParams(params);
-    }
-
-    private String safePart(String[] parts, int index) {
-        return safePart(parts, index, "");
-    }
-
-    private String safePart(String[] parts, int index, String fallback) {
-        return (parts != null && index >= 0 && index < parts.length) ? parts[index] : fallback;
     }
 
     private int dpToPx(int dp) {

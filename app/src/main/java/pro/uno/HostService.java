@@ -15,6 +15,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 
+import pro.uno.cards.Card;
+import pro.uno.cards.CardActionContext;
+import pro.uno.cards.CardRegistry;
+
 public class HostService {
 
     private static final int MAX_PLAYERS = 4;
@@ -307,19 +311,19 @@ public class HostService {
             p.hand.clear();
             p.unoCalled = false;
             for (int i = 0; i < STARTING_HAND; i++) {
-                p.hand.add(drawFromDeck());
+                giveCardsToPlayer(p, 1);
             }
         }
 
         String first = drawFromDeck();
-        while (isWild(first) && !deck.isEmpty()) {
+        while (CardRegistry.create(first).isWild() && !deck.isEmpty()) {
             deck.add(first);
             Collections.shuffle(deck, random);
             first = drawFromDeck();
         }
 
         discard.add(first);
-        currentColor = getCardColor(first);
+        currentColor = CardRegistry.create(first).getColor();
 
         sendSnapshotsToAll("Game started.");
     }
@@ -386,6 +390,7 @@ public class HostService {
         }
 
         String card = normalizeCard(parts[1]);
+        Card playedCard = CardRegistry.create(card);
         String chosenColor = parts.length >= 3 ? parts[2] : "";
 
         if (!player.hand.contains(card)) {
@@ -393,13 +398,13 @@ public class HostService {
             return;
         }
 
-        if (!isValidCard(card)) {
+        if (!CardRegistry.isValid(playedCard)) {
             send_to(senderId, "error|Invalid card.");
             return;
         }
 
         String topCard = getTopCard();
-        if (!isPlayable(card, topCard, currentColor)) {
+        if (!CardRegistry.isPlayable(card, topCard, currentColor)) {
             send_to(senderId, "error|That card cannot be played now.");
             return;
         }
@@ -407,18 +412,15 @@ public class HostService {
         player.hand.remove(card);
         discard.add(card);
 
-        if (isWild(card)) {
-            if (!isColorValid(chosenColor)) {
-                send_to(senderId, "error|Choose a valid color for wild card.");
-                // Put the card back if color is invalid.
-                discard.remove(discard.size() - 1);
-                player.hand.add(card);
-                return;
-            }
-            currentColor = chosenColor;
-        } else {
-            currentColor = getCardColor(card);
+        CardActionContext actionContext = new CardActionContext(playedCard, senderId, players.size(), chosenColor);
+        playedCard.onCardPlayed(actionContext);
+        if (playedCard.requiresColorChoice() && !actionContext.hasColorOverride()) {
+            send_to(senderId, "error|Choose a valid color for wild card.");
+            discard.remove(discard.size() - 1);
+            player.hand.add(card);
+            return;
         }
+        currentColor = actionContext.resolveTopCardColor(playedCard.getColor());
 
         if (player.hand.size() != 1) {
             player.unoCalled = false;
@@ -432,43 +434,30 @@ public class HostService {
             return;
         }
 
-        applyCardEffect(card);
+        applyCardEffect(playedCard, actionContext);
     }
 
-    private void applyCardEffect(String card) {
+    private void applyCardEffect(Card card, CardActionContext actionContext) {
         int step = 1;
-        int drawCount = 0;
-        boolean skip = false;
 
-        if (isAction(card, "reverse")) {
-            if (players.size() == 2) {
-                skip = true;
-            } else {
-                direction *= -1;
-            }
-        } else if (isAction(card, "block")) {
-            skip = true;
-        } else if (isAction(card, "plus")) {
-            drawCount = isWild(card) ? 4 : 2;
-            skip = true;
+        if (actionContext.shouldReverseDirection()) {
+            direction *= -1;
         }
 
-        if (drawCount > 0) {
+        if (actionContext.getNextPlayerDrawCount() > 0) {
             PlayerState next = players.get(getRelativePlayerId(1));
             if (next != null) {
-                for (int i = 0; i < drawCount; i++) {
-                    next.hand.add(drawFromDeck());
-                }
+                giveCardsToPlayer(next, actionContext.getNextPlayerDrawCount());
                 next.unoCalled = false;
             }
         }
 
-        if (skip) {
+        if (actionContext.shouldSkipNextPlayer()) {
             step = 2;
         }
 
         advanceTurn(step);
-        sendSnapshotsToAll("Card played: " + card);
+        sendSnapshotsToAll("Card played: " + card.id());
     }
 
     private void handleDraw(int senderId) {
@@ -487,7 +476,7 @@ public class HostService {
             return;
         }
 
-        player.hand.add(drawFromDeck());
+        giveCardsToPlayer(player, 1);
         player.unoCalled = false;
         advanceTurn(1);
         sendSnapshotsToAll(player.name + " drew a card.");
@@ -528,8 +517,7 @@ public class HostService {
         }
 
         if (target.hand.size() == 1 && !target.unoCalled) {
-            target.hand.add(drawFromDeck());
-            target.hand.add(drawFromDeck());
+            giveCardsToPlayer(target, 2);
             target.unoCalled = false;
             sendSnapshotsToAll("Penalty! " + target.name + " drew 2 cards.");
         } else {
@@ -618,26 +606,7 @@ public class HostService {
     }
 
     private void buildDeck(List<String> out) {
-        String[] colors = new String[]{"red", "blue", "green", "yellow"};
-
-        for (String color : colors) {
-            out.add("card_" + color + "_0");
-            for (int n = 1; n <= 9; n++) {
-                out.add("card_" + color + "_" + n);
-                out.add("card_" + color + "_" + n);
-            }
-
-            for (int i = 0; i < 2; i++) {
-                out.add("power_" + color + "_reverse");
-                out.add("power_" + color + "_block");
-                out.add("power_" + color + "_plus");
-            }
-        }
-
-        for (int i = 0; i < 4; i++) {
-            out.add("super_black_color");
-            out.add("super_black_plus");
-        }
+        CardRegistry.buildStandardDeck(out);
     }
 
     private String getTopCard() {
@@ -686,126 +655,11 @@ public class HostService {
     }
 
     private boolean isPlayable(String card, String topCard, String activeColor) {
-        if (card == null || card.isEmpty()) {
-            return false;
-        }
-        if (!isValidCard(card)) {
-            return false;
-        }
-        if (topCard != null && !topCard.isEmpty() && !isValidCard(topCard)) {
-            return false;
-        }
-        if (isWild(card)) {
-            return true;
-        }
-        if (topCard == null || topCard.isEmpty()) {
-            return true;
-        }
-
-        String cardColor = getCardColor(card);
-        String topColor = activeColor == null || activeColor.isEmpty() ? getCardColor(topCard) : activeColor;
-
-        if (cardColor.equals(topColor)) {
-            return true;
-        }
-
-        String cardValue = getCardValue(card);
-        String topValue = getCardValue(topCard);
-        return cardValue.equals(topValue);
-    }
-
-    private boolean isWild(String card) {
-        return "super".equals(getCardFamily(card));
-    }
-
-    private boolean isAction(String card, String action) {
-        return getCardValue(card).equals(action);
-    }
-
-    private String getCardColor(String card) {
-        card = normalizeCard(card);
-        String[] parts = card.split("_");
-        if (parts.length >= 2) {
-            return parts[1];
-        }
-        return "red";
-    }
-
-    private String getCardValue(String card) {
-        card = normalizeCard(card);
-        String[] parts = card.split("_");
-        if (parts.length >= 3) {
-            return parts[2];
-        }
-        return "";
-    }
-
-    private String getCardFamily(String card) {
-        card = card == null ? "" : card.trim();
-        String[] parts = card.split("_");
-        if (parts.length >= 1) {
-            return parts[0];
-        }
-        return "";
+        return CardRegistry.isPlayable(card, topCard, activeColor);
     }
 
     private String normalizeCard(String card) {
-        if (card == null) {
-            return "";
-        }
-
-        String[] parts = card.trim().split("_");
-        if (parts.length < 3) {
-            return card.trim();
-        }
-
-        String family = parts[0];
-        String color = parts[1];
-        String value = parts[2];
-
-        if ("super".equals(family)) {
-            return "super_black_" + value;
-        }
-
-        if ("card".equals(family) || "power".equals(family)) {
-            if ("black".equals(color)) {
-                return "";
-            }
-            return family + "_" + color + "_" + value;
-        }
-
-        return card.trim();
-    }
-
-    private boolean isValidCard(String card) {
-        String family = getCardFamily(card);
-        String color = getCardColor(card);
-        String value = getCardValue(card);
-
-        if ("super".equals(family)) {
-            return "black".equals(color) && ("plus".equals(value) || "color".equals(value));
-        }
-
-        if ("power".equals(family)) {
-            return isStandardColor(color) && ("plus".equals(value) || "reverse".equals(value) || "block".equals(value));
-        }
-
-        if ("card".equals(family)) {
-            if (!isStandardColor(color)) {
-                return false;
-            }
-            if ("0".equals(value)) {
-                return true;
-            }
-            try {
-                int num = Integer.parseInt(value);
-                return num >= 1 && num <= 9;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-
-        return false;
+        return CardFormatter.normalize(card);
     }
 
     private boolean isColorValid(String color) {
@@ -813,7 +667,7 @@ public class HostService {
     }
 
     private boolean isStandardColor(String color) {
-        return "red".equals(color) || "blue".equals(color) || "green".equals(color) || "yellow".equals(color);
+        return CardCatalog.isStandardColor(color);
     }
 
     private String sanitizeHostName(String hostName) {
@@ -863,5 +717,21 @@ public class HostService {
 
     private boolean canStartGame() {
         return players.size() == desiredPlayers && areAllPlayersReady();
+    }
+
+    private void giveCardsToPlayer(PlayerState player, int totalCards) {
+        if (player == null || totalCards <= 0) {
+            return;
+        }
+
+        for (int i = 0; i < totalCards; i++) {
+            String cardId = drawFromDeck();
+            player.hand.add(cardId);
+
+            Card drawnCard = CardRegistry.create(cardId);
+            CardActionContext context = new CardActionContext(drawnCard, player.id, players.size(), "");
+            drawnCard.onCardDrawedToPlayer(context);
+            drawnCard.onPlayerTakeTheCard(context);
+        }
     }
 }
