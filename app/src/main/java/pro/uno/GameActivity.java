@@ -312,7 +312,7 @@ public class GameActivity extends BaseMaterialActivity {
         }
 
         int cardWidth = dpToPx(70);
-        int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(64);
+        int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(56);
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
 
@@ -407,7 +407,6 @@ public class GameActivity extends BaseMaterialActivity {
             return;
         }
         card.animate().translationY(0).setDuration(120).start();
-        card.setTranslationZ(Math.max(0, cardIndex));
     }
 
     private void goBackToLobby() {
