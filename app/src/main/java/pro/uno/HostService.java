@@ -495,7 +495,8 @@ public class HostService {
 
     private boolean anyHumanClientsExceptHost() {
         // Human clients are in the 'clients' list.
-        // If there's more than one client, it's not singleplayer.
+        // A single-player host (user) will be the only one in 'clients'.
+        // If 'clients' size is 1, only the user is connected (no remote human players).
         return clients.size() > 1;
     }
 
