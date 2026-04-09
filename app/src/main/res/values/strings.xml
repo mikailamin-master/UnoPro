@@ -55,7 +55,7 @@
     <string name="toast_failed_parse_lobby">Failed to parse lobby state.</string>
     <string name="toast_connection_closed">Connection closed.</string>
     <string name="toast_wait_turn">Wait for your turn.</string>
-    <string name="toast_uno_only_one_card">UNO can be called only with one card.</string>
+    <string name="toast_uno_only_one_card">Can\'t say uno now.</string>
     <string name="toast_failed_parse_game">Failed to parse game state.</string>
     <string name="toast_penalty_invalid">Penalty not valid now.</string>
     <string name="toast_select_card_first">Select a card first.</string>

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,7 +20,7 @@ public class GameActivity extends BaseMaterialActivity {
 
     public static final String EXTRA_SNAPSHOT = "snapshot";
 
-    private LinearLayout topCardPreview;
+    private FrameLayout topCardPreview;
     private LinearLayout cardContainer;
     private MaterialButton drawCardBtn;
     private MaterialButton takeCardBtn;
@@ -41,6 +42,8 @@ public class GameActivity extends BaseMaterialActivity {
     private final int[] opponentCardCounts = new int[]{0, 0, 0};
 
     private final ArrayList<String> receivedCardList = new ArrayList<>();
+    private final ArrayList<String> discardHistory = new ArrayList<>();
+    private static final int MAX_DISCARD_HISTORY = 5;
 
     private ClientService client;
     private CardViewFactory cardViewFactory;
@@ -204,7 +207,18 @@ public class GameActivity extends BaseMaterialActivity {
             started = snapshot.started;
             myId = snapshot.myId;
             currentTurnId = snapshot.currentTurnId;
-            topCard = snapshot.topCard;
+            
+            String newTopCard = CardFormatter.normalize(snapshot.topCard);
+            if (!topCard.equals(newTopCard)) {
+                if (!topCard.isEmpty()) {
+                    discardHistory.add(0, topCard);
+                    if (discardHistory.size() > MAX_DISCARD_HISTORY) {
+                        discardHistory.remove(discardHistory.size() - 1);
+                    }
+                }
+                topCard = newTopCard;
+            }
+            
             currentColor = snapshot.currentColor;
 
             showStatus(snapshot.status);
@@ -312,7 +326,8 @@ public class GameActivity extends BaseMaterialActivity {
         }
 
         int cardWidth = dpToPx(70);
-        int screenWidth = getResources().getDisplayMetrics().widthPixels - dpToPx(56);
+        int containerPadding = dpToPx(32); // space_md (12) * 2 + parent padding
+        int screenWidth = getResources().getDisplayMetrics().widthPixels - containerPadding;
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
 
@@ -320,7 +335,7 @@ public class GameActivity extends BaseMaterialActivity {
 	        overlap = (totalWidth - screenWidth) / (totalCards - 1);
         }
         
-        overlap = Math.min(overlap, cardWidth);
+        overlap = Math.min(overlap, (int)(cardWidth * 0.8)); // Limit overlap to 80%
 
         markedCardId = -1;
         lastMarkedCard = null;
@@ -335,7 +350,7 @@ public class GameActivity extends BaseMaterialActivity {
             );
 
             if (i != 0) {
-                params.setMargins(-overlap, 0, 0, 0);
+                params.leftMargin = -overlap;
             }
 
             card.setLayoutParams(params);
@@ -373,8 +388,39 @@ public class GameActivity extends BaseMaterialActivity {
             return;
         }
 
-        View preview = createCardView(topCard, topCardPreview, true);
-        topCardPreview.addView(preview);
+        // Render previous cards
+        for (int i = discardHistory.size() - 1; i >= 0; i--) {
+            String historyCard = discardHistory.get(i);
+            View view = createCardView(historyCard, topCardPreview, true);
+            
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.gravity = android.view.Gravity.CENTER;
+            view.setLayoutParams(params);
+            
+            // Random rotation between -15 and 15 degrees
+            float rotation = (float) (Math.random() * 30 - 15);
+            view.setRotation(rotation);
+            
+            // Fading effect for previous cards
+            float alpha = 0.2f + (0.5f * (float)(discardHistory.size() - i) / (float)MAX_DISCARD_HISTORY);
+            view.setAlpha(Math.min(alpha, 0.7f));
+            
+            topCardPreview.addView(view);
+        }
+
+        // Render the actual top card
+        View topView = createCardView(topCard, topCardPreview, true);
+        FrameLayout.LayoutParams topParams = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        topParams.gravity = android.view.Gravity.CENTER;
+        topView.setLayoutParams(topParams);
+        topView.setElevation(10); // Bring to front
+        topCardPreview.addView(topView);
     }
 
     private View createCardView(String data, ViewGroup parent, boolean large) {

@@ -8,5 +8,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-keystore.properties
 sig.jks
+keystore.properties
+.gradle/

@@ -58,7 +58,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
-            app:cardBackgroundColor="@color/md_theme_light_surface">
+            app:cardBackgroundColor="@color/md_theme_light_surface"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/md_theme_light_outline">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -66,13 +70,11 @@
                 android:orientation="vertical"
                 android:padding="@dimen/space_lg">
 
-                <LinearLayout
+                <FrameLayout
                     android:id="@+id/top_card_preview"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:minHeight="174dp"
-                    android:orientation="vertical" />
+                    android:layout_height="180dp"
+                    android:foregroundGravity="center" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
