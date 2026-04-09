@@ -304,18 +304,21 @@ private void setupButtons() {
         connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
         lobbyStatusTxt.setText(R.string.status_waiting_players_connect);
         updateModeButtons();
-        lobbyStatusTxt.postDelayed(() -> {
-            connectAsClient("127.0.0.1", desiredPlayers);
-        }, 250);
+
+        // Single delayed block to avoid race conditions
         connectionTxt.postDelayed(() -> {
-            // Add bots after connecting the user
-            if (withAI && botNames != null) {
-                for (int i = 0; i < aiCount; i++) {
-                    hostService.addAIPlayer(botNames[i]);
+            connectAsClient("127.0.0.1", desiredPlayers);
+
+            // Wait slightly longer for client to actually connect and join
+            connectionTxt.postDelayed(() -> {
+                if (withAI && botNames != null) {
+                    for (int i = 0; i < aiCount; i++) {
+                        hostService.addAIPlayer(botNames[i]);
+                    }
                 }
-            }
-        }, 500);
-    }
+            }, 300);
+        }, 250);
+        }
     private void connectAsClient(String ip, int requestedPlayers) {
         client = ClientService.getInstance();
         client.setClientListener(new ClientService.ClientListener() {
