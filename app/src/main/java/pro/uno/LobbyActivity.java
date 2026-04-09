@@ -301,19 +301,20 @@ private void setupButtons() {
         UnoSession.setHostService(hostService);
         hostService.start_server(UnoConfig.TCP_PORT, desiredPlayers, myName);
 
-        // Connect user first to ensure they get the first ID (Host)
-        connectionTxt.postDelayed(() -> connectAsClient("127.0.0.1", desiredPlayers), 250);
-
-        // Add bots after
-        if (withAI && botNames != null) {
-            for (int i = 0; i < aiCount; i++) {
-                hostService.addAIPlayer(botNames[i]);
-            }
-        }
-
         connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
         lobbyStatusTxt.setText(R.string.status_waiting_players_connect);
         updateModeButtons();
+        
+        connectionTxt.postDelayed(() -> {
+            connectAsClient("127.0.0.1", desiredPlayers);
+
+            // Add bots after connecting the user
+            if (withAI && botNames != null) {
+                for (int i = 0; i < aiCount; i++) {
+                    hostService.addAIPlayer(botNames[i]);
+                }
+            }
+        }, 250);
     }
     private void connectAsClient(String ip, int requestedPlayers) {
         client = ClientService.getInstance();
