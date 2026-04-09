@@ -13,7 +13,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import pro.uno.cards.Card;
 import pro.uno.cards.CardActionContext;
@@ -33,6 +37,7 @@ public class HostService {
     private final LinkedHashMap<Integer, PlayerState> players = new LinkedHashMap<>();
     private final ArrayList<String> deck = new ArrayList<>();
     private final ArrayList<String> discard = new ArrayList<>();
+    private final ScheduledExecutorService aiExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private int nextId = 1;
     private int desiredPlayers = MIN_PLAYERS;
@@ -60,13 +65,19 @@ public class HostService {
         String name;
         boolean ready;
         boolean unoCalled;
+        boolean isAI;
         final ArrayList<String> hand = new ArrayList<>();
 
         PlayerState(int id) {
+            this(id, false);
+        }
+
+        PlayerState(int id, boolean isAI) {
             this.id = id;
-            this.name = "Player " + id;
+            this.name = isAI ? "AI " + id : "Player " + id;
             this.ready = false;
             this.unoCalled = false;
+            this.isAI = isAI;
         }
     }
 
@@ -118,8 +129,24 @@ public class HostService {
         closeDiscoverySocket();
     }
 
+    public synchronized void addAIPlayer(String name) {
+        if (started || players.size() >= desiredPlayers || players.size() >= MAX_PLAYERS) {
+            return;
+        }
+
+        int id = nextId++;
+        PlayerState ai = new PlayerState(id, true);
+        if (name != null && !name.trim().isEmpty()) {
+            ai.name = name;
+        }
+        ai.ready = true;
+        players.put(id, ai);
+
+        sendLobbySnapshot(ai.name + " joined the lobby.");
+    }
+
     private synchronized void handleNewClient(Socket socket) {
-        if (started || clients.size() >= desiredPlayers || clients.size() >= MAX_PLAYERS) {
+        if (started || players.size() >= desiredPlayers || players.size() >= MAX_PLAYERS) {
             try {
                 socket.getOutputStream().write("error|Lobby is full or game already started.\n".getBytes(StandardCharsets.UTF_8));
                 socket.close();
@@ -326,6 +353,106 @@ public class HostService {
         currentColor = CardRegistry.create(first).getColor();
 
         sendSnapshotsToAll("Game started.");
+        checkAITurn();
+    }
+
+    private synchronized void checkAITurn() {
+        if (!started) return;
+        int currentId = getCurrentTurnPlayerId();
+        PlayerState current = players.get(currentId);
+        if (current != null && current.isAI) {
+            scheduleAITurn(currentId);
+        }
+    }
+
+    private void scheduleAITurn(final int aiId) {
+        aiExecutor.schedule(() -> {
+            synchronized (HostService.this) {
+                performAITurn(aiId);
+            }
+        }, 1200 + random.nextInt(800), TimeUnit.MILLISECONDS);
+    }
+
+    private void performAITurn(int aiId) {
+        PlayerState ai = players.get(aiId);
+        if (ai == null || !started || getCurrentTurnPlayerId() != aiId) return;
+
+        String topCard = getTopCard();
+        List<String> playable = new ArrayList<>();
+        for (String card : ai.hand) {
+            if (CardRegistry.isPlayable(card, topCard, currentColor)) {
+                playable.add(card);
+            }
+        }
+
+        if (playable.isEmpty()) {
+            handle_message("draw", aiId);
+            return;
+        }
+
+        // Pro AI Logic: Pick best card
+        String bestCard = pickBestAICard(playable, ai.hand);
+        String chosenColor = "";
+        if (CardRegistry.create(bestCard).requiresColorChoice()) {
+            chosenColor = pickBestAIColor(ai.hand);
+        }
+
+        // Call UNO if needed
+        if (ai.hand.size() == 2 && !ai.unoCalled) {
+            handle_message("uno", aiId);
+        }
+
+        handle_message("play|" + bestCard + "|" + chosenColor, aiId);
+    }
+
+    String pickBestAICard(List<String> playable, List<String> hand) {
+        // Simple strategy:
+        // 1. Prefer matching number/color (NormalCard)
+        // 2. Then power cards (Skip, Reverse, PlusTwo)
+        // 3. Then wild cards (ColorChange, PlusFour)
+
+        String best = playable.get(0);
+        int bestScore = -1;
+
+        for (String cId : playable) {
+            Card c = CardRegistry.create(cId);
+            int score = 0;
+            if ("card".equals(c.getFamily())) score = 10;
+            else if ("power".equals(c.getFamily())) score = 5;
+            else if ("super".equals(c.getFamily())) score = 1;
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = cId;
+            }
+        }
+        return best;
+    }
+
+    String pickBestAIColor(List<String> hand) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put("red", 0);
+        counts.put("blue", 0);
+        counts.put("green", 0);
+        counts.put("yellow", 0);
+
+        for (String cId : hand) {
+            Card c = CardRegistry.create(cId);
+            String color = c.getColor();
+            if (counts.containsKey(color)) {
+                counts.put(color, counts.get(color) + 1);
+            }
+        }
+
+        String bestColor = "red";
+        int max = -1;
+        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+            if (entry.getValue() > max) {
+                max = entry.getValue();
+                bestColor = entry.getKey();
+            }
+        }
+        return bestColor;
     }
 
     private void handleReady(String[] parts, int senderId) {
@@ -644,6 +771,7 @@ public class HostService {
             return;
         }
         turnIndex = normalizeIndex(turnIndex + (step * direction), ids.size());
+        checkAITurn();
     }
 
     private int normalizeIndex(int value, int size) {

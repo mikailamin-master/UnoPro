@@ -8,6 +8,7 @@
     <string name="host_mode">Host</string>
     <string name="join_mode">Join</string>
     <string name="create_lobby">Create Lobby</string>
+    <string name="single_player">Single Player</string>
     <string name="join_lobby">Join Lobby</string>
     <string name="lobby_title_format">Lobby %1$d/%2$d</string>
     <string name="lobby_idle_status">Create or join a lobby to begin.</string>
@@ -30,6 +31,11 @@
     <string name="player_name_default">Player %1$d</string>
 
     <string name="dialog_how_many_players">How many players?</string>
+    <string name="dialog_ai_opponents_title">Choose AI Opponents</string>
+    <string name="ai_opponent_1">1 Opponent</string>
+    <string name="ai_opponent_2">2 Opponents</string>
+    <string name="ai_opponent_3">3 Opponents</string>
+    <string name="ai_player_name">AI %1$d</string>
     <string name="players_2">2 Players</string>
     <string name="players_3">3 Players</string>
     <string name="players_4">4 Players</string>

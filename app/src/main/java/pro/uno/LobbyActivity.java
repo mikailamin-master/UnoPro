@@ -29,6 +29,7 @@ public class LobbyActivity extends BaseMaterialActivity {
     private TextView connectionTxt;
     private TextView[] playerTxt;
     private MaterialButton hostBtn;
+    private MaterialButton singlePlayerBtn;
     private MaterialButton joinBtn;
     private MaterialButton readyBtn;
     private MaterialButton startBtn;
@@ -73,6 +74,7 @@ public class LobbyActivity extends BaseMaterialActivity {
                 findViewById(R.id.player_4_txt)
         };
         hostBtn = findViewById(R.id.host_btn);
+        singlePlayerBtn = findViewById(R.id.single_player_btn);
         joinBtn = findViewById(R.id.join_btn);
         readyBtn = findViewById(R.id.ready_btn);
         startBtn = findViewById(R.id.start_btn);
@@ -86,6 +88,13 @@ public class LobbyActivity extends BaseMaterialActivity {
                 return;
             }
             showHostPlayerCountDialog();
+        });
+
+        singlePlayerBtn.setOnClickListener(v -> {
+            if (!prepareName()) {
+                return;
+            }
+            showSinglePlayerAiCountDialog();
         });
 
         joinBtn.setOnClickListener(v -> {
@@ -127,6 +136,7 @@ public class LobbyActivity extends BaseMaterialActivity {
     private void updateModeButtons() {
         boolean hostSelected = hostMode.isChecked();
         hostBtn.setVisibility(hostSelected ? View.VISIBLE : View.GONE);
+        singlePlayerBtn.setVisibility(hostSelected ? View.VISIBLE : View.GONE);
         joinBtn.setVisibility(hostSelected ? View.GONE : View.VISIBLE);
     }
 
@@ -137,9 +147,27 @@ public class LobbyActivity extends BaseMaterialActivity {
                 .setTitle(R.string.dialog_how_many_players)
                 .setItems(items, (dialog, which) -> {
                     desiredPlayers = which + 2;
-                    startHosting();
+                    startHosting(false, 0);
                 })
                 .setCancelable(false)
+                .show();
+    }
+
+    private void showSinglePlayerAiCountDialog() {
+        String[] items = {
+                getString(R.string.ai_opponent_1),
+                getString(R.string.ai_opponent_2),
+                getString(R.string.ai_opponent_3)
+        };
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_ai_opponents_title)
+                .setItems(items, (dialog, which) -> {
+                    int aiCount = which + 1;
+                    desiredPlayers = aiCount + 1;
+                    startHosting(true, aiCount);
+                })
+                .setCancelable(true)
                 .show();
     }
 
@@ -235,10 +263,16 @@ public class LobbyActivity extends BaseMaterialActivity {
                 .show();
     }
 
-    private void startHosting() {
+    private void startHosting(boolean withAI, int aiCount) {
         HostService hostService = new HostService();
         UnoSession.setHostService(hostService);
         hostService.start_server(6000, desiredPlayers, myName);
+
+        if (withAI) {
+            for (int i = 0; i < aiCount; i++) {
+                hostService.addAIPlayer(getString(R.string.ai_player_name, i + 1));
+            }
+        }
 
         connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
         lobbyStatusTxt.setText(R.string.status_waiting_players_connect);

@@ -11,7 +11,34 @@ import pro.uno.cards.CardActionContext;
 import pro.uno.cards.CardPlusFour;
 import pro.uno.cards.CardRegistry;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class LogicUnitTest {
+
+    @Test
+    public void aiLogic_choosesBestCard() {
+        HostService host = new HostService();
+        List<String> hand = Arrays.asList("card_red_1", "power_red_plus", "super_black_color");
+        List<String> playable = Arrays.asList("card_red_1", "power_red_plus", "super_black_color");
+
+        String best = host.pickBestAICard(playable, hand);
+        assertEquals("card_red_1", best); // Normal cards have highest score (10) in my current simple logic
+
+        List<String> playable2 = Arrays.asList("power_red_plus", "super_black_color");
+        String best2 = host.pickBestAICard(playable2, hand);
+        assertEquals("power_red_plus", best2); // Power cards (5) > Super cards (1)
+    }
+
+    @Test
+    public void aiLogic_choosesBestColor() {
+        HostService host = new HostService();
+        List<String> hand = Arrays.asList("card_red_1", "card_blue_1", "card_blue_5", "card_green_2");
+
+        String bestColor = host.pickBestAIColor(hand);
+        assertEquals("blue", bestColor);
+    }
 
     @Test
     public void cardFormatter_normalizesAndHumanizesCards() {

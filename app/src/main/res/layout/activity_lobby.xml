@@ -95,6 +95,14 @@
                     android:text="@string/create_lobby" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/single_player_btn"
+                    style="@style/Widget.UNO.Button.Tonal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_md"
+                    android:text="@string/single_player" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/join_btn"
                     style="@style/Widget.UNO.Button.Tonal"
                     android:layout_width="match_parent"

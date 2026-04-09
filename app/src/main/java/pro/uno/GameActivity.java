@@ -326,7 +326,7 @@ public class GameActivity extends BaseMaterialActivity {
         }
 
         int cardWidth = dpToPx(70);
-        int containerPadding = dpToPx(32); // space_md (12) * 2 + parent padding
+        int containerPadding = dpToPx(56); // space_md (12) * 2 + parent padding
         int screenWidth = getResources().getDisplayMetrics().widthPixels - containerPadding;
         int totalWidth = cardWidth * totalCards;
         int overlap = 0;
