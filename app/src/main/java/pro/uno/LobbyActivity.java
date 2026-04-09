@@ -309,16 +309,19 @@ private void setupButtons() {
         connectionTxt.postDelayed(() -> {
             connectAsClient("127.0.0.1", desiredPlayers);
 
-            // Wait slightly longer for client to actually connect and join
-            connectionTxt.postDelayed(() -> {
-                if (withAI && botNames != null) {
-                    for (int i = 0; i < aiCount; i++) {
-                        hostService.addAIPlayer(botNames[i]);
+            new Thread(() -> {
+                // Add bots after connecting the user, in background
+                try {
+                    Thread.sleep(300);
+                    if (withAI && botNames != null) {
+                        for (int i = 0; i < aiCount; i++) {
+                            hostService.addAIPlayer(botNames[i]);
+                        }
                     }
-                }
-            }, 300);
-        }, 250);
-        }
+                } catch (InterruptedException ignored) {}
+            }).start();
+        }, 250);    }
+    
     private void connectAsClient(String ip, int requestedPlayers) {
         client = ClientService.getInstance();
         client.setClientListener(new ClientService.ClientListener() {
