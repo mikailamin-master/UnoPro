@@ -482,11 +482,9 @@ public class HostService {
             return;
         }
 
-        // Allow start if it's singleplayer (1 human + bots) OR if all ready
-        boolean isSinglePlayer = clients.size() == 1 && players.size() > 1;
-        if (!isSinglePlayer && !canStartGame()) {
-            send_to(senderId, "error|All players must be connected and ready.");
-            sendLobbySnapshot("Waiting for all players to get ready.");
+        // Just check if we have enough players to start, regardless of ready status.
+        if (players.size() < UnoConfig.MIN_PLAYERS) {
+            send_to(senderId, "error|Need at least " + UnoConfig.MIN_PLAYERS + " players.");
             return;
         }
 
