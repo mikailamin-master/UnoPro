@@ -180,12 +180,14 @@ private void setupButtons() {
                 getString(R.string.ai_opponent_3)
         };
 
+        final String[] botNames = {"AutoBOT", "MicroBOT", "Android"};
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_ai_opponents_title)
                 .setItems(items, (dialog, which) -> {
                     int aiCount = which + 1;
                     desiredPlayers = aiCount + 1;
-                    startHosting(true, aiCount);
+                    startHosting(true, aiCount, botNames);
                 })
                 .setCancelable(true)
                 .show();
@@ -290,14 +292,18 @@ private void setupButtons() {
     }
 
     private void startHosting(boolean withAI, int aiCount) {
+        startHosting(withAI, aiCount, null);
+    }
+
+    private void startHosting(boolean withAI, int aiCount, String[] botNames) {
         isSinglePlayer = withAI;
         HostService hostService = new HostService();
         UnoSession.setHostService(hostService);
         hostService.start_server(UnoConfig.TCP_PORT, desiredPlayers, myName);
 
-        if (withAI) {
+        if (withAI && botNames != null) {
             for (int i = 0; i < aiCount; i++) {
-                hostService.addAIPlayer(getString(R.string.ai_player_name, i + 1));
+                hostService.addAIPlayer(botNames[i]);
             }
         }
 
