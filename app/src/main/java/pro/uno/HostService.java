@@ -151,6 +151,9 @@ public class HostService {
         int id = nextId++;
         ClientHandler client = new ClientHandler(socket, this, id);
         clients.add(client);
+        
+        // Ensure the host is always the first player ID (the user).
+        // If we add AI, nextId is incremented, and they get higher IDs.
         players.put(id, new PlayerState(id));
         client.start();
 
