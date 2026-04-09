@@ -25,12 +25,6 @@ import pro.uno.cards.CardRegistry;
 
 public class HostService {
 
-    private static final int MAX_PLAYERS = 4;
-    private static final int MIN_PLAYERS = 2;
-    private static final int STARTING_HAND = 7;
-    private static final int DISCOVERY_PORT = 6001;
-    private static final String DISCOVERY_REQUEST = "UNO_DISCOVER_REQUEST_V1";
-
     private ServerSocket server;
     private DatagramSocket discoverySocket;
     private final ArrayList<ClientHandler> clients = new ArrayList<>();
@@ -40,7 +34,7 @@ public class HostService {
     private final ScheduledExecutorService aiExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private int nextId = 1;
-    private int desiredPlayers = MIN_PLAYERS;
+    private int desiredPlayers = UnoConfig.MIN_PLAYERS;
     private boolean running = false;
     private boolean started = false;
     private String hostDisplayName = "UNO Host";
@@ -94,7 +88,7 @@ public class HostService {
             return;
         }
 
-        desiredPlayers = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, targetPlayers));
+        desiredPlayers = Math.max(UnoConfig.MIN_PLAYERS, Math.min(UnoConfig.MAX_PLAYERS, targetPlayers));
         hostDisplayName = sanitizeHostName(hostName);
         running = true;
         startDiscoveryResponder(port);
@@ -130,7 +124,7 @@ public class HostService {
     }
 
     public synchronized void addAIPlayer(String name) {
-        if (started || players.size() >= desiredPlayers || players.size() >= MAX_PLAYERS) {
+        if (started || players.size() >= desiredPlayers || players.size() >= UnoConfig.MAX_PLAYERS) {
             return;
         }
 
@@ -144,9 +138,8 @@ public class HostService {
 
         sendLobbySnapshot(ai.name + " joined the lobby.");
     }
-
     private synchronized void handleNewClient(Socket socket) {
-        if (started || players.size() >= desiredPlayers || players.size() >= MAX_PLAYERS) {
+        if (started || players.size() >= desiredPlayers || players.size() >= UnoConfig.MAX_PLAYERS) {
             try {
                 socket.getOutputStream().write("error|Lobby is full or game already started.\n".getBytes(StandardCharsets.UTF_8));
                 socket.close();
@@ -180,7 +173,7 @@ public class HostService {
     private synchronized void startDiscoveryResponder(int gamePort) {
         Thread discoveryThread = new Thread(() -> {
             try {
-                discoverySocket = new DatagramSocket(DISCOVERY_PORT);
+                discoverySocket = new DatagramSocket(UnoConfig.DISCOVERY_PORT);
                 byte[] buffer = new byte[512];
 
                 while (running) {
@@ -188,7 +181,7 @@ public class HostService {
                     discoverySocket.receive(request);
 
                     String body = new String(request.getData(), 0, request.getLength(), StandardCharsets.UTF_8);
-                    if (!DISCOVERY_REQUEST.equals(body)) {
+                    if (!UnoConfig.DISCOVERY_REQUEST.equals(body)) {
                         continue;
                     }
 
@@ -212,7 +205,7 @@ public class HostService {
     }
 
     private synchronized String buildDiscoveryResponse(int gamePort) {
-        return "UNO_HOST_V1|"
+        return UnoConfig.DISCOVERY_RESPONSE_PREFIX
                 + hostDisplayName + "|"
                 + gamePort + "|"
                 + players.size() + "|"
@@ -300,14 +293,14 @@ public class HostService {
         if (parts.length >= 2) {
             String proposedName = parts[1].trim();
             if (!proposedName.isEmpty()) {
-                player.name = proposedName.length() > 20 ? proposedName.substring(0, 20) : proposedName;
+                player.name = proposedName.length() > UnoConfig.MAX_PLAYER_NAME_LENGTH ? proposedName.substring(0, UnoConfig.MAX_PLAYER_NAME_LENGTH) : proposedName;
             }
         }
 
         if (parts.length >= 3) {
             try {
                 int requested = Integer.parseInt(parts[2]);
-                if (!started && requested >= MIN_PLAYERS && requested <= MAX_PLAYERS) {
+                if (!started && requested >= UnoConfig.MIN_PLAYERS && requested <= UnoConfig.MAX_PLAYERS) {
                     desiredPlayers = requested;
                 }
             } catch (NumberFormatException ignored) {
@@ -337,7 +330,7 @@ public class HostService {
         for (PlayerState p : players.values()) {
             p.hand.clear();
             p.unoCalled = false;
-            for (int i = 0; i < STARTING_HAND; i++) {
+            for (int i = 0; i < UnoConfig.STARTING_HAND_SIZE; i++) {
                 giveCardsToPlayer(p, 1);
             }
         }
@@ -370,7 +363,7 @@ public class HostService {
             synchronized (HostService.this) {
                 performAITurn(aiId);
             }
-        }, 1200 + random.nextInt(800), TimeUnit.MILLISECONDS);
+        }, UnoConfig.AI_TURN_DELAY_BASE_MS + random.nextInt(UnoConfig.AI_TURN_DELAY_RANDOM_MS), TimeUnit.MILLISECONDS);
     }
 
     private void performAITurn(int aiId) {
@@ -417,9 +410,9 @@ public class HostService {
         for (String cId : playable) {
             Card c = CardRegistry.create(cId);
             int score = 0;
-            if ("card".equals(c.getFamily())) score = 10;
-            else if ("power".equals(c.getFamily())) score = 5;
-            else if ("super".equals(c.getFamily())) score = 1;
+            if ("card".equals(c.getFamily())) score = UnoConfig.SCORE_NORMAL_CARD;
+            else if ("power".equals(c.getFamily())) score = UnoConfig.SCORE_POWER_CARD;
+            else if ("super".equals(c.getFamily())) score = UnoConfig.SCORE_SUPER_CARD;
 
             if (score > bestScore) {
                 bestScore = score;
@@ -644,9 +637,9 @@ public class HostService {
         }
 
         if (target.hand.size() == 1 && !target.unoCalled) {
-            giveCardsToPlayer(target, 2);
+            giveCardsToPlayer(target, UnoConfig.PENALTY_CARD_COUNT);
             target.unoCalled = false;
-            sendSnapshotsToAll("Penalty! " + target.name + " drew 2 cards.");
+            sendSnapshotsToAll("Penalty! " + target.name + " drew " + UnoConfig.PENALTY_CARD_COUNT + " cards.");
         } else {
             send_to(senderId, "error|Penalty is not valid now.");
         }
@@ -806,8 +799,8 @@ public class HostService {
         if (cleaned.isEmpty()) {
             return "UNO Host";
         }
-        if (cleaned.length() > 20) {
-            return cleaned.substring(0, 20);
+        if (cleaned.length() > UnoConfig.MAX_PLAYER_NAME_LENGTH) {
+            return cleaned.substring(0, UnoConfig.MAX_PLAYER_NAME_LENGTH);
         }
         return cleaned;
     }

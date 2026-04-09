@@ -44,7 +44,6 @@ public class GameActivity extends BaseMaterialActivity {
 
     private final ArrayList<String> receivedCardList = new ArrayList<>();
     private final ArrayList<String> discardHistory = new ArrayList<>();
-    private static final int MAX_DISCARD_HISTORY = 5;
 
     private ClientService client;
     private CardViewFactory cardViewFactory;
@@ -231,7 +230,7 @@ public class GameActivity extends BaseMaterialActivity {
             if (!topCard.equals(newTopCard)) {
                 if (!topCard.isEmpty()) {
                     discardHistory.add(0, topCard);
-                    if (discardHistory.size() > MAX_DISCARD_HISTORY) {
+                    if (discardHistory.size() > UnoConfig.MAX_DISCARD_STACK_HISTORY) {
                         discardHistory.remove(discardHistory.size() - 1);
                     }
                 }
@@ -409,7 +408,7 @@ public class GameActivity extends BaseMaterialActivity {
 
             boolean playable = CardRegistry.isPlayable(data, topCard, currentColor);
             if (playable && isMyTurn()) {
-                card.setTranslationY(-dpToPx(20));
+                card.setTranslationY(-dpToPx(UnoConfig.PLAYABLE_CARD_POPUP_DP));
             }
 
             int cardIndex = i;
@@ -432,7 +431,7 @@ public class GameActivity extends BaseMaterialActivity {
 
                     markedCardId = cardIndex;
                     lastMarkedCard = card;
-                    card.animate().translationY(-dpToPx(20)).setDuration(120).start();
+                    card.animate().translationY(-dpToPx(UnoConfig.PLAYABLE_CARD_POPUP_DP)).setDuration(UnoConfig.CARD_ANIMATION_DURATION_MS).start();
                 }
             });
 
@@ -465,7 +464,7 @@ public class GameActivity extends BaseMaterialActivity {
             view.setRotation(rotation);
             
             // Fading effect for previous cards
-            float alpha = 0.1f + (0.4f * (float)(discardHistory.size() - i) / (float)MAX_DISCARD_HISTORY);
+            float alpha = 0.1f + (0.4f * (float)(discardHistory.size() - i) / (float)UnoConfig.MAX_DISCARD_STACK_HISTORY);
             view.setAlpha(Math.min(alpha, 0.7f));
             
             topCardPreview.addView(view);
@@ -513,7 +512,7 @@ public class GameActivity extends BaseMaterialActivity {
         if (card == null) {
             return;
         }
-        card.animate().translationY(0).setDuration(120).start();
+        card.animate().translationY(0).setDuration(UnoConfig.CARD_ANIMATION_DURATION_MS).start();
     }
 
     private void goBackToLobby() {

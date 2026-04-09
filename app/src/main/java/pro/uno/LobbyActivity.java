@@ -266,7 +266,7 @@ public class LobbyActivity extends BaseMaterialActivity {
     private void startHosting(boolean withAI, int aiCount) {
         HostService hostService = new HostService();
         UnoSession.setHostService(hostService);
-        hostService.start_server(6000, desiredPlayers, myName);
+        hostService.start_server(UnoConfig.TCP_PORT, desiredPlayers, myName);
 
         if (withAI) {
             for (int i = 0; i < aiCount; i++) {
@@ -331,7 +331,7 @@ public class LobbyActivity extends BaseMaterialActivity {
             }
         });
 
-        client.connect(ip, 6000);
+        client.connect(ip, UnoConfig.TCP_PORT);
     }
 
     private void handleServerMessage(String msg) {
