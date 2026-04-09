@@ -88,8 +88,9 @@
     <string name="card_count_plural">cards</string>
 
     <string name="label_host_suffix">%1$s (Host)</string>
-    <string name="label_player_ready">%1$s  - Ready</string>
-    <string name="label_player_waiting">%1$s  - Waiting</string>
+    <string name="label_player_id">(ID: %1$d)</string>
+    <string name="label_player_ready">%1$s %2$s - Ready</string>
+    <string name="label_player_waiting">%1$s %2$s - Waiting</string>
     <string name="label_host_selection">%1$s  (%2$s)  %3$d/%4$d  %5$s</string>
     <string name="label_host_state_running">running</string>
     <string name="label_host_state_lobby">lobby</string>
