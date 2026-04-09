@@ -41,6 +41,8 @@ public class LobbyActivity extends BaseMaterialActivity {
     private int myId = -1;
     private int desiredPlayers = 2;
     private int hostId = -1;
+    private boolean isSinglePlayer = false;
+    private boolean isScanning = false;
     private boolean allConnected = false;
     private boolean allReady = false;
     private boolean amReady = false;
@@ -81,39 +83,45 @@ public class LobbyActivity extends BaseMaterialActivity {
 
         nameInput.setText(getString(R.string.default_player_name, ((System.currentTimeMillis() / 1000) % 100)));
     }
+private void setupButtons() {
+    hostBtn.setOnClickListener(v -> {
+        if (client != null && client.isConnected()) {
+            leaveLobby();
+            return;
+        }
+        if (!prepareName()) {
+            return;
+        }
+        showHostPlayerCountDialog();
+    });
 
-    private void setupButtons() {
-        hostBtn.setOnClickListener(v -> {
-            if (!prepareName()) {
-                return;
-            }
-            showHostPlayerCountDialog();
-        });
+    singlePlayerBtn.setOnClickListener(v -> {
+        if (!prepareName()) {
+            return;
+        }
+        showSinglePlayerAiCountDialog();
+    });
 
-        singlePlayerBtn.setOnClickListener(v -> {
-            if (!prepareName()) {
-                return;
-            }
-            showSinglePlayerAiCountDialog();
-        });
+    joinBtn.setOnClickListener(v -> {
+        if (client != null && client.isConnected()) {
+            leaveLobby();
+            return;
+        }
+        if (!prepareName()) {
+            return;
+        }
+        scanAndJoinHost();
+    });
 
-        joinBtn.setOnClickListener(v -> {
-            if (!prepareName()) {
-                return;
-            }
-            scanAndJoinHost();
-        });
+    readyBtn.setOnClickListener(v -> {
+        if (client == null || !client.isConnected()) {
+            showToast(getString(R.string.toast_join_lobby_first));
+            return;
+        }
+        client.send("ready|" + (!amReady ? 1 : 0));
+    });
 
-        readyBtn.setOnClickListener(v -> {
-            if (client == null || !client.isConnected()) {
-                showToast(getString(R.string.toast_join_lobby_first));
-                return;
-            }
-            client.send("ready|" + (!amReady ? 1 : 0));
-        });
-
-        startBtn.setOnClickListener(v -> {
-            if (client == null || !client.isConnected()) {
+    startBtn.setOnClickListener(v -> {            if (client == null || !client.isConnected()) {
                 showToast(getString(R.string.toast_join_lobby_first));
                 return;
             }
@@ -135,9 +143,21 @@ public class LobbyActivity extends BaseMaterialActivity {
 
     private void updateModeButtons() {
         boolean hostSelected = hostMode.isChecked();
-        hostBtn.setVisibility(hostSelected ? View.VISIBLE : View.GONE);
-        singlePlayerBtn.setVisibility(hostSelected ? View.VISIBLE : View.GONE);
-        joinBtn.setVisibility(hostSelected ? View.GONE : View.VISIBLE);
+        boolean connected = client != null && client.isConnected();
+
+        // Host section
+        if (hostSelected) {
+            hostBtn.setVisibility(View.VISIBLE);
+            singlePlayerBtn.setVisibility(connected || isSinglePlayer ? View.GONE : View.VISIBLE);
+            joinBtn.setVisibility(View.GONE);
+            hostBtn.setText(connected ? R.string.leave_lobby : R.string.create_lobby);
+        } else {
+            // Join section
+            hostBtn.setVisibility(View.GONE);
+            singlePlayerBtn.setVisibility(View.GONE);
+            joinBtn.setVisibility(isScanning ? View.GONE : View.VISIBLE);
+            joinBtn.setText(connected ? R.string.leave_lobby : R.string.join_lobby);
+        }
     }
 
     private void showHostPlayerCountDialog() {
@@ -194,6 +214,8 @@ public class LobbyActivity extends BaseMaterialActivity {
     }
 
     private void scanAndJoinHost() {
+        isScanning = true;
+        updateModeButtons();
         lobbyStatusTxt.setText(R.string.status_scanning_hosts);
         if (hostScanner == null) {
             hostScanner = new LanHostScanner();
@@ -209,6 +231,8 @@ public class LobbyActivity extends BaseMaterialActivity {
             @Override
             public void onFinished() {
                 runOnUiThread(() -> {
+                    isScanning = false;
+                    updateModeButtons();
                     if (isFinishing()) {
                         return;
                     }
@@ -233,6 +257,8 @@ public class LobbyActivity extends BaseMaterialActivity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
+                    isScanning = false;
+                    updateModeButtons();
                     showToast(message);
                     showJoinIpDialog();
                 });
@@ -264,6 +290,7 @@ public class LobbyActivity extends BaseMaterialActivity {
     }
 
     private void startHosting(boolean withAI, int aiCount) {
+        isSinglePlayer = withAI;
         HostService hostService = new HostService();
         UnoSession.setHostService(hostService);
         hostService.start_server(UnoConfig.TCP_PORT, desiredPlayers, myName);
@@ -276,6 +303,7 @@ public class LobbyActivity extends BaseMaterialActivity {
 
         connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
         lobbyStatusTxt.setText(R.string.status_waiting_players_connect);
+        updateModeButtons();
         connectionTxt.postDelayed(() -> connectAsClient("127.0.0.1", desiredPlayers), 250);
     }
 
@@ -292,12 +320,13 @@ public class LobbyActivity extends BaseMaterialActivity {
                 runOnUiThread(() -> {
                     connectionTxt.setText(getString(R.string.status_connected_to, ip));
                     lobbyStatusTxt.setText(R.string.status_connected_waiting_lobby);
-                    hostBtn.setEnabled(false);
-                    joinBtn.setEnabled(false);
+                    hostBtn.setEnabled(true);
+                    joinBtn.setEnabled(true);
                     nameInput.setEnabled(false);
                     hostMode.setEnabled(false);
                     RadioButton joinRadio = findViewById(R.id.join_mode);
                     joinRadio.setEnabled(false);
+                    updateModeButtons();
                 });
             }
 
@@ -309,6 +338,7 @@ public class LobbyActivity extends BaseMaterialActivity {
                     }
                     myId = -1;
                     hostId = -1;
+                    isSinglePlayer = false;
                     allConnected = false;
                     allReady = false;
                     amReady = false;
@@ -320,6 +350,7 @@ public class LobbyActivity extends BaseMaterialActivity {
                     joinRadio.setEnabled(true);
                     hostBtn.setEnabled(true);
                     joinBtn.setEnabled(true);
+                    updateModeButtons();
                     updateLobbyUi(null);
                 });
             }
@@ -332,6 +363,15 @@ public class LobbyActivity extends BaseMaterialActivity {
         });
 
         client.connect(ip, UnoConfig.TCP_PORT);
+    }
+
+    private void leaveLobby() {
+        if (client != null) {
+            client.disconnect();
+        }
+        UnoSession.stopHostService();
+        isSinglePlayer = false;
+        updateModeButtons();
     }
 
     private void handleServerMessage(String msg) {
