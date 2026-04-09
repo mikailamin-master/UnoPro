@@ -482,13 +482,21 @@ public class HostService {
             return;
         }
 
-        if (!canStartGame() && players.size() > 1) {
+        // Allow start if it's singleplayer (1 human + bots) OR if all ready
+        boolean isSinglePlayer = players.size() > 1 && !anyHumanClientsExceptHost();
+        if (!isSinglePlayer && !canStartGame()) {
             send_to(senderId, "error|All players must be connected and ready.");
             sendLobbySnapshot("Waiting for all players to get ready.");
             return;
         }
 
         startGame();
+    }
+
+    private boolean anyHumanClientsExceptHost() {
+        // Human clients are in the 'clients' list.
+        // If there's more than one client, it's not singleplayer.
+        return clients.size() > 1;
     }
 
     private void handlePlay(String[] parts, int senderId) {
