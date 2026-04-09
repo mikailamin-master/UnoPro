@@ -122,13 +122,22 @@ private void setupButtons() {
     });
 
     startBtn.setOnClickListener(v -> {
+        if (isSinglePlayer) {
+            // In singleplayer mode, we are the host, send start directly
+            if (client != null && client.isConnected()) {
+                client.send("start");
+            } else {
+                showToast(getString(R.string.toast_not_connected));
+            }
+            return;
+        }
+
         if (client == null || !client.isConnected()) {
             showToast(getString(R.string.toast_join_lobby_first));
             return;
         }
         client.send("start");
-    });
-        modeGroup.setOnCheckedChangeListener((group, checkedId) -> updateModeButtons());
+    });        modeGroup.setOnCheckedChangeListener((group, checkedId) -> updateModeButtons());
         updateModeButtons();
     }
 
