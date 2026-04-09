@@ -121,13 +121,13 @@ private void setupButtons() {
         client.send("ready|" + (!amReady ? 1 : 0));
     });
 
-    startBtn.setOnClickListener(v -> {            if (client == null || !client.isConnected()) {
-                showToast(getString(R.string.toast_join_lobby_first));
-                return;
-            }
-            client.send("start");
-        });
-
+    startBtn.setOnClickListener(v -> {
+        if (client == null || !client.isConnected()) {
+            showToast(getString(R.string.toast_join_lobby_first));
+            return;
+        }
+        client.send("start");
+    });
         modeGroup.setOnCheckedChangeListener((group, checkedId) -> updateModeButtons());
         updateModeButtons();
     }
