@@ -304,17 +304,17 @@ private void setupButtons() {
         connectionTxt.setText(getString(R.string.status_hosting_on, getLocalIpv4Address()));
         lobbyStatusTxt.setText(R.string.status_waiting_players_connect);
         updateModeButtons();
-        
-        connectionTxt.postDelayed(() -> {
+        lobbyStatusTxt.postDelayed(() -> {
             connectAsClient("127.0.0.1", desiredPlayers);
-
+        }, 250);
+        connectionTxt.postDelayed(() -> {
             // Add bots after connecting the user
             if (withAI && botNames != null) {
                 for (int i = 0; i < aiCount; i++) {
                     hostService.addAIPlayer(botNames[i]);
                 }
             }
-        }, 250);
+        }, 500);
     }
     private void connectAsClient(String ip, int requestedPlayers) {
         client = ClientService.getInstance();

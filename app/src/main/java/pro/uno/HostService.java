@@ -816,8 +816,15 @@ public class HostService {
     }
 
     private int getHostPlayerId() {
-        // The host should always be ID 1.
-        return 1;
+        if (players.isEmpty()) return -1;
+        
+        int minId = Integer.MAX_VALUE;
+        for (Integer id : players.keySet()) {
+            if (id < minId) {
+                minId = id;
+            }
+        }
+        return minId;
     }
 
     private boolean isHostPlayerId(int playerId) {
