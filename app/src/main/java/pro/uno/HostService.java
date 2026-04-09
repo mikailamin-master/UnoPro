@@ -479,7 +479,7 @@ public class HostService {
             return;
         }
 
-        if (!canStartGame()) {
+        if (!canStartGame() && players.size() > 1) {
             send_to(senderId, "error|All players must be connected and ready.");
             sendLobbySnapshot("Waiting for all players to get ready.");
             return;
