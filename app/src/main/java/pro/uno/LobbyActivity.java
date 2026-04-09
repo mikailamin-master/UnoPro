@@ -441,6 +441,7 @@ private void setupButtons() {
 
         readyBtn.setEnabled(client != null && client.isConnected() && !launchingGame);
         readyBtn.setText(amReady ? R.string.not_ready : R.string.ready);
+        readyBtn.setVisibility(isSinglePlayer ? View.GONE : View.VISIBLE);
 
         boolean isHost = myId > 0 && myId == hostId;
         boolean canStart = isHost && allConnected && allReady;
