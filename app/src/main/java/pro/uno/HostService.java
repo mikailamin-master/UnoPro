@@ -483,7 +483,7 @@ public class HostService {
         }
 
         // Allow start if it's singleplayer (1 human + bots) OR if all ready
-        boolean isSinglePlayer = players.size() > 1 && !anyHumanClientsExceptHost();
+        boolean isSinglePlayer = clients.size() == 1 && players.size() > 1;
         if (!isSinglePlayer && !canStartGame()) {
             send_to(senderId, "error|All players must be connected and ready.");
             sendLobbySnapshot("Waiting for all players to get ready.");
