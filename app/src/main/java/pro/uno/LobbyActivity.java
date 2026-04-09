@@ -446,7 +446,7 @@ private void setupButtons() {
         boolean isHost = myId > 0 && myId == hostId;
         boolean canStart = isHost && allConnected && allReady;
         
-        startBtn.setVisibility(isHost ? View.VISIBLE : View.GONE);
+        startBtn.setVisibility(isHost || isSinglePlayer ? View.VISIBLE : View.GONE);
         startBtn.setEnabled(isSinglePlayer || canStart);
 
         if (isHost) {
