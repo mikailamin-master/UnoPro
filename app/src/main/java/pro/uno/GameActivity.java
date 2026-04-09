@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import pro.uno.cards.CardRegistry;
 import pro.uno.ui.card.CardViewFactory;
 
 public class GameActivity extends BaseMaterialActivity {
@@ -50,7 +51,11 @@ public class GameActivity extends BaseMaterialActivity {
 
     private int myId = -1;
     private int currentTurnId = -1;
+    private int prevTurnId = -1;
+    private int prevCardCount = -1;
     private boolean started = false;
+    private boolean isUnoQueued = false;
+    private String myName = "";
     private String topCard = "";
     private String currentColor = "";
 
@@ -149,7 +154,7 @@ public class GameActivity extends BaseMaterialActivity {
     }
 
     private void setupButtons() {
-        drawCardBtn.setOnClickListener(v -> onPlaySelectedCard());
+        drawCardBtn.setVisibility(View.GONE);
 
         takeCardBtn.setOnClickListener(v -> {
             if (!isMyTurn()) {
@@ -162,8 +167,13 @@ public class GameActivity extends BaseMaterialActivity {
         unoCallBtn.setOnClickListener(v -> {
             if (receivedCardList.size() == 1) {
                 sendToServer("uno");
+                isUnoQueued = false;
+            } else if (receivedCardList.size() == 2) {
+                isUnoQueued = !isUnoQueued;
+                showStatus(isUnoQueued ? "UNO Queued" : "UNO Unqueued");
             } else {
                 showToast(getString(R.string.toast_uno_only_one_card));
+                isUnoQueued = false;
             }
         });
 
@@ -208,6 +218,15 @@ public class GameActivity extends BaseMaterialActivity {
             myId = snapshot.myId;
             currentTurnId = snapshot.currentTurnId;
             
+            if (myName.isEmpty()) myName = "You";
+
+            if (currentTurnId != prevTurnId) {
+                if (prevTurnId == myId) {
+                    isUnoQueued = false;
+                }
+                prevTurnId = currentTurnId;
+            }
+
             String newTopCard = CardFormatter.normalize(snapshot.topCard);
             if (!topCard.equals(newTopCard)) {
                 if (!topCard.isEmpty()) {
@@ -221,9 +240,17 @@ public class GameActivity extends BaseMaterialActivity {
             
             currentColor = snapshot.currentColor;
 
-            showStatus(snapshot.status);
             receivedCardList.clear();
             receivedCardList.addAll(snapshot.myHand);
+
+            // Detect draw
+            if (isMyTurn() && prevCardCount != -1 && receivedCardList.size() == prevCardCount + 1) {
+                String drawnCard = receivedCardList.get(receivedCardList.size() - 1);
+                if (CardRegistry.isPlayable(drawnCard, topCard, currentColor)) {
+                    showDrawResultDialog(drawnCard, receivedCardList.size() - 1);
+                }
+            }
+            prevCardCount = receivedCardList.size();
 
             for (int i = 0; i < 3; i++) {
                 opponentPlayerIds[i] = -1;
@@ -255,9 +282,26 @@ public class GameActivity extends BaseMaterialActivity {
             renderTopCardPreview();
             arrangeCards(receivedCardList);
             updateActionButtons();
+            
+            showStatus(snapshot.status);
         } catch (Exception e) {
             showToast(getString(R.string.toast_failed_parse_game));
         }
+    }
+
+    private void showDrawResultDialog(String cardId, int index) {
+        View cardView = cardViewFactory.createCardView(CardFormatter.normalize(cardId), null, true);
+        FrameLayout container = new FrameLayout(this);
+        int padding = dpToPx(16);
+        container.setPadding(padding, padding, padding, padding);
+        container.addView(cardView);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.dialog_got_card, cardId))
+                .setView(container)
+                .setPositiveButton(R.string.dialog_play_card, (dialog, which) -> onPlayCard(index))
+                .setNegativeButton(R.string.dialog_skip, null)
+                .show();
     }
 
     private void onPenaltyClicked(int slot) {
@@ -273,23 +317,30 @@ public class GameActivity extends BaseMaterialActivity {
         }
     }
 
-    private void onPlaySelectedCard() {
+    private void onPlayCard(int index) {
         if (!isMyTurn()) {
             showToast(getString(R.string.toast_wait_turn));
             return;
         }
 
-        if (markedCardId < 0 || markedCardId >= receivedCardList.size()) {
-            showToast(getString(R.string.toast_select_card_first));
-            return;
+        if (index < 0 || index >= receivedCardList.size()) return;
+
+        String card = CardFormatter.normalize(receivedCardList.get(index));
+        
+        if (isUnoQueued && receivedCardList.size() == 2) {
+            sendToServer("uno");
+            isUnoQueued = false;
         }
 
-        String card = CardFormatter.normalize(receivedCardList.get(markedCardId));
         if (card.startsWith("super_")) {
             showColorPicker(card);
         } else {
             sendToServer("play|" + card + "|");
         }
+    }
+
+    private void onPlaySelectedCard() {
+        onPlayCard(markedCardId);
     }
 
     private void showColorPicker(String card) {
@@ -356,24 +407,33 @@ public class GameActivity extends BaseMaterialActivity {
             card.setLayoutParams(params);
             card.setElevation(i);
 
+            boolean playable = CardRegistry.isPlayable(data, topCard, currentColor);
+            if (playable && isMyTurn()) {
+                card.setTranslationY(-dpToPx(20));
+            }
+
             int cardIndex = i;
             card.setOnClickListener(v -> {
-                if (markedCardId == cardIndex) {
-                    if (lastMarkedCard != null) {
-                        resetCardSelection(lastMarkedCard, cardIndex);
+                if (isMyTurn() && CardRegistry.isPlayable(data, topCard, currentColor)) {
+                    onPlayCard(cardIndex);
+                } else {
+                    if (markedCardId == cardIndex) {
+                        if (lastMarkedCard != null) {
+                            resetCardSelection(lastMarkedCard, cardIndex);
+                        }
+                        markedCardId = -1;
+                        lastMarkedCard = null;
+                        return;
                     }
-                    markedCardId = -1;
-                    lastMarkedCard = null;
-                    return;
-                }
 
-                if (lastMarkedCard != null) {
-                    resetCardSelection(lastMarkedCard, markedCardId);
-                }
+                    if (lastMarkedCard != null) {
+                        resetCardSelection(lastMarkedCard, markedCardId);
+                    }
 
-                markedCardId = cardIndex;
-                lastMarkedCard = card;
-                card.animate().translationY(-dpToPx(20)).setDuration(120).start();
+                    markedCardId = cardIndex;
+                    lastMarkedCard = card;
+                    card.animate().translationY(-dpToPx(20)).setDuration(120).start();
+                }
             });
 
             cardContainer.addView(card);
@@ -400,12 +460,12 @@ public class GameActivity extends BaseMaterialActivity {
             params.gravity = android.view.Gravity.CENTER;
             view.setLayoutParams(params);
             
-            // Random rotation between -15 and 15 degrees
-            float rotation = (float) (Math.random() * 30 - 15);
+            // Real stack feel: More rotation between -35 and 35 degrees
+            float rotation = (float) (Math.random() * 70 - 35);
             view.setRotation(rotation);
             
             // Fading effect for previous cards
-            float alpha = 0.2f + (0.5f * (float)(discardHistory.size() - i) / (float)MAX_DISCARD_HISTORY);
+            float alpha = 0.1f + (0.4f * (float)(discardHistory.size() - i) / (float)MAX_DISCARD_HISTORY);
             view.setAlpha(Math.min(alpha, 0.7f));
             
             topCardPreview.addView(view);
@@ -436,7 +496,8 @@ public class GameActivity extends BaseMaterialActivity {
     }
 
     private void showStatus(String text) {
-        statusTxt.setText(CardFormatter.buildTurnStatusText(this, started, currentTurnId, myId, text));
+        String displayName = GameUiFormatter.buildPlayerName(this, myName, isUnoQueued);
+        statusTxt.setText(CardFormatter.buildTurnStatusText(this, started, currentTurnId, myId, text).replace("You", displayName));
         topCardTxt.setText(CardFormatter.buildTopCardStatusText(this, topCard, currentColor));
     }
 

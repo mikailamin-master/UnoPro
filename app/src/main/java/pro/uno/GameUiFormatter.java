@@ -15,4 +15,11 @@ public final class GameUiFormatter {
                 unit
         );
     }
+
+    public static String buildPlayerName(Context context, String name, boolean unoQueued) {
+        if (unoQueued) {
+            return context.getString(R.string.status_player_name_uno_queued, name);
+        }
+        return name;
+    }
 }

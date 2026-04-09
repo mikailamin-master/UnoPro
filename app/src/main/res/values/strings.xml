@@ -47,6 +47,10 @@
     <string name="rescan">Rescan</string>
     <string name="dialog_select_host">Select Host</string>
     <string name="dialog_choose_color">Choose color</string>
+    <string name="dialog_play_card">Play</string>
+    <string name="dialog_skip">Skip</string>
+    <string name="dialog_got_card">You got: %s</string>
+    <string name="status_player_name_uno_queued">%1$s (*UNO)</string>
 
     <string name="color_red">red</string>
     <string name="color_blue">blue</string>
