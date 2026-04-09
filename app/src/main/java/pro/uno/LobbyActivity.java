@@ -443,11 +443,13 @@ private void setupButtons() {
         readyBtn.setText(amReady ? R.string.not_ready : R.string.ready);
 
         boolean isHost = myId > 0 && myId == hostId;
+        boolean canStart = isHost && allConnected && allReady;
+        
         startBtn.setVisibility(isHost ? View.VISIBLE : View.GONE);
-        startBtn.setEnabled(isHost && allConnected && allReady);
+        startBtn.setEnabled(isSinglePlayer || canStart);
 
         if (isHost) {
-            startBtn.setText(LobbyUiFormatter.buildStartButtonLabel(this, allConnected, allReady));
+            startBtn.setText(isSinglePlayer ? getString(R.string.start_game) : LobbyUiFormatter.buildStartButtonLabel(this, allConnected, allReady));
         }
     }
 
